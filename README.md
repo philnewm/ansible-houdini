@@ -1,6 +1,6 @@
-# Role Name
+# Houdini-Role
 
-[![Alma9-CI](https://github.com/philnewm/ansible-role-template/actions/workflows/alma9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/alma9-ci-caller.yml)  [![Rocky9-CI](https://github.com/philnewm/ansible-role-template/actions/workflows/rocky9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/rocky9-ci-caller.yml)  [![CentOSStream9-CI](https://github.com/philnewm/ansible-role-template/actions/workflows/centosstream9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/centosstream9-ci-caller.yml)  [![Debian12-CI](https://github.com/philnewm/ansible-role-template/actions/workflows/debian12-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/debian12-ci-caller.yml)  [![Ubuntu2204-CI](https://github.com/philnewm/ansible-role-template/actions/workflows/ubuntu2204-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-role-template/actions/workflows/ubuntu2204-ci-caller.yml)
+[![Alma9-CI](https://github.com/philnewm/ansible-houdini/actions/workflows/alma9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-houdini/actions/workflows/alma9-ci-caller.yml)  [![Rocky9-CI](https://github.com/philnewm/ansible-houdini/actions/workflows/rocky9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-houdini/actions/workflows/rocky9-ci-caller.yml)  [![CentOSStream9-CI](https://github.com/philnewm/ansible-houdini/actions/workflows/centosstream9-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-houdini/actions/workflows/centosstream9-ci-caller.yml)  [![Debian12-CI](https://github.com/philnewm/ansible-houdini/actions/workflows/debian12-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-houdini/actions/workflows/debian12-ci-caller.yml)  [![Ubuntu2204-CI](https://github.com/philnewm/ansible-houdini/actions/workflows/ubuntu2204-ci-caller.yml/badge.svg)](https://github.com/philnewm/ansible-houdini/actions/workflows/ubuntu2204-ci-caller.yml)
 
 Role description
 
@@ -9,7 +9,7 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
 ## Structure
 
 ```code
-📦 ansible-role-template
+📦 ansible-houdini
  ┣ 📂 defaults
  ┃ ┗ 📜 main.yml
  ┣ 📂 files
@@ -65,9 +65,9 @@ Add an example playbook
 ---
 
 tasks:
-  - name: Include ansible-role-template present
+  - name: Include ansible-houdini present
     ansible.builtin.include_role:
-      name: ansible-role-template
+      name: ansible-houdini
     vars:
       state: present
 
