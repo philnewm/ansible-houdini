@@ -1,0 +1,11 @@
+---
+
+# Install tasks
+# INFO larger roles should only use **include_tasks** here
+
+
+# INFO This task may be obsolete for your use-case
+- name: Gather package facts
+  ansible.builtin.package_facts:
+
+...
