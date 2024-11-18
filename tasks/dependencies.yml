@@ -3,8 +3,16 @@
 # Runs all dependencies
 
 
-# INFO This task may be osbolete for your use-case
 - name: Gather package facts
   ansible.builtin.package_facts:
+
+- name: Install dependencies
+  become: true
+  loop: "{{ dependencies[ansible_os_family] }}"
+  when: item not in ansible_facts.packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
 
 ...

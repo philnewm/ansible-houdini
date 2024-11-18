@@ -3,5 +3,10 @@
 # Variables for ansible-role-template
 
 state: present
+version: "20.5.410"
+install_path: /opt/hfs{{ version }}
+eula_date: "2021-10-13"
+install_name: houdini-{{ version }}-linux_x86_64_gcc11.2
+installer_path: "/home/dev_test/Documents/{{ install_name }}.tar.gz"
 
 ...

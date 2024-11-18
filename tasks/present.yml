@@ -4,8 +4,57 @@
 # INFO larger roles should only use **include_tasks** here
 
 
-# INFO This task may be obsolete for your use-case
-- name: Gather package facts
-  ansible.builtin.package_facts:
+
+- name: Check for houdini install
+  ansible.builtin.stat:
+    path: "{{ install_path }}"
+  register: houdini_path
+
+- name: "Install Dependencies"
+  ansible.builtin.include_tasks:
+    file: dependencies.yml 
+
+# - name: "Install houdini {{ version }}"
+#   when: not houdini_path.stat.exists
+#   ansible.builtin.include_tasks:
+#     file: dependencies.yml
+
+- name: Get installer
+  ansible.builtin.copy:
+    src: "{{ installer_path }}"
+    dest: "/tmp/{{ install_name }}.tar.gz"
+
+- name: Create install dir
+  ansible.builtin.file:
+    path: /tmp/{{ install_name }}
+    state: directory
+    mode: "0755"
+
+- name: Extract houdini installer
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ install_name }}.tar.gz"
+    dest: "/tmp/{{ install_name }}"
+    creates: "/tmp/{{ install_name }}/houdini.install"
+    remote_src: yes
+    extra_opts:
+      - "--strip-components=1"
+
+- name: Cleanup installer archive
+  ansible.builtin.file:
+    path: "/tmp/{{ install_name }}.tar.gz"
+    state: absent
+
+- name: Install houdini
+  become: true
+  ansible.builtin.command:
+    cmd: ./houdini.install --accept-EULA {{ eula_date }} --install-houdini --install-menus --install-hfs-symlink --install-license --install-avahi --install-sidefxlabs --auto-install --make-dir {{ install_path }}
+  args:
+    chdir: "/tmp/{{ install_name }}"
+    creates: "{{ install_path }}"
+
+- name: Cleanup installer directory
+  ansible.builtin.file:
+    path: "/tmp/{{ install_name }}"
+    state: absent
 
 ...

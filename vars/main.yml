@@ -3,7 +3,31 @@
 # vars file for ansible-role-template
 
 
-# remove this placeholder
-ansible_role_template: "Default role name still in use."
+dependencies:
+  "RedHat": 
+    - python3-psutil
+    - bc
+    - libXScrnSaver
+    - qt5-qtbase
+    - qt5-qtbase-gui
+    - libxcb
+    - libxcb-devel
+    - xcb-util
+    - xcb-util-keysyms
+    - xorg-x11-utils
+    - xmessage
+  "Debian": 
+    - python3-psutil
+    - bc
+    - libxss1
+    - qtbase5-dev
+    - qtbase5-dev-tools
+    - libxcb1
+    - libx11-xcb1
+    - libxcb-keysyms1
+    - libxcb-render0
+    - libxcb-shape0
+    - libxcb-xfixes0
+    - x11-utils
 
 ...
