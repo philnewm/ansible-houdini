@@ -44,6 +44,13 @@
     path: "/tmp/{{ install_name }}.tar.gz"
     state: absent
 
+- name: Set SELinux to permissive
+  when: ansible_os_family == "RedHat"
+  become: true
+  ansible.builtin.command:
+    cmd: setenforce 0
+  changed_when: false
+
 - name: Install houdini
   become: true
   ansible.builtin.command:
@@ -56,5 +63,10 @@
   ansible.builtin.file:
     path: "/tmp/{{ install_name }}"
     state: absent
+
+- name: Configure license manager with selinux
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.include_tasks:
+    file: local_license_manager_setup.yml 
 
 ...

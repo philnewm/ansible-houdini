@@ -16,6 +16,7 @@ dependencies:
     - xcb-util-keysyms
     - xorg-x11-utils
     - xmessage
+    - mesa-demos
   "Debian": 
     - python3-psutil
     - bc
@@ -29,5 +30,11 @@ dependencies:
     - libxcb-shape0
     - libxcb-xfixes0
     - x11-utils
+    - mesa-utils
+
+selinux_packages:
+  - policycoreutils-devel
+  - rpmbuild-order.x86_64
+  - chkconfig
 
 ...
