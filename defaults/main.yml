@@ -7,6 +7,9 @@ version: "20.5.410"
 install_path: /opt/hfs{{ version }}
 eula_date: "2021-10-13"
 install_name: houdini-{{ version }}-linux_x86_64_gcc11.2
-installer_path: "/home/dev_test/Documents/{{ install_name }}.tar.gz"
+local_installer_path: "{{ ansible_env.HOME }}/Videos/{{ install_name }}.tar.gz"
+
+api_download_python_modules:
+  - python3-requests
 
 ...

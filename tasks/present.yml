@@ -4,24 +4,46 @@
 # INFO larger roles should only use **include_tasks** here
 
 
-
-- name: Check for houdini install
-  ansible.builtin.stat:
-    path: "{{ install_path }}"
-  register: houdini_path
-
-- name: "Install Dependencies"
-  ansible.builtin.include_tasks:
-    file: dependencies.yml 
-
 # - name: "Install houdini {{ version }}"
 #   when: not houdini_path.stat.exists
 #   ansible.builtin.include_tasks:
 #     file: dependencies.yml
 
+- name: Check for houdini install
+  ansible.builtin.stat:
+    path: "{{ local_installer_path }}"
+  register: local_installer_path
+
+- name: Get remote houdini installer
+  when: not local_installer_path.stat.exists
+  block:
+    - name: Install python modules
+      become: true
+      loop: "{{ api_download_python_modules }}"
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+
+    - name: Copy download scripts to remote host
+      ansible.builtin.copy:
+        src: "scripts/"
+        dest: "/tmp/scripts/"
+        remote_src: no
+
+    - name: Get Houdini installer
+      ansible.builtin.command:
+        cmd: python3 api_download.py
+        chdir: "/tmp/scripts/"
+
+    - name: Remove scripts
+      ansible.builtin.file:
+        path: "/tmp/scripts/"
+        state: absent
+
 - name: Get installer
+  when: local_installer_path.stat.exists
   ansible.builtin.copy:
-    src: "{{ installer_path }}"
+    src: "{{ local_installer_path }}"
     dest: "/tmp/{{ install_name }}.tar.gz"
 
 - name: Create install dir
@@ -29,6 +51,10 @@
     path: /tmp/{{ install_name }}
     state: directory
     mode: "0755"
+
+- name: "Install Dependencies"
+  ansible.builtin.include_tasks:
+    file: dependencies.yml 
 
 - name: Extract houdini installer
   ansible.builtin.unarchive:
