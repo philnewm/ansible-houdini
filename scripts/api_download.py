@@ -15,14 +15,9 @@ if __name__ == '__main__':
         endpoint_url="https://www.sidefx.com/api/",
     )
 
-    # Retrieve the daily builds list, if you want the latest production
-    # you can skip this step
-    releases_list = service.download.get_daily_builds_list(
-        product='houdini', version='20.5', platform='linux', only_production=True)
-
-    # Retrieve the latest daily build available
+    # Retrieve the latest production build available
     latest_release = service.download.get_daily_build_download(
-        product='houdini', version='20.5', build=releases_list[0]['build'], platform='linux')
+        product='houdini', version='20.5', build='production', platform='linux')
 
     # Download the file
     local_filename = latest_release['filename']
