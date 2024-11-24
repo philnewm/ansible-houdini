@@ -27,5 +27,6 @@ jobs:
     with:
       scenario_name: test_alma9
       houdini_role_pre_script: true
+    secrets: inherit
 
 ...
