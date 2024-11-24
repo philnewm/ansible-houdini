@@ -1,6 +1,4 @@
 molecule==24.7.0
 molecule-plugins[vagrant]
 docker==7.1.0
-requests
-hashlib
-shutil
+requests==2.32.3
