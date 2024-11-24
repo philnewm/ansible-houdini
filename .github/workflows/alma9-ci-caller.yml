@@ -27,10 +27,10 @@ jobs:
     with:
       scenario_name: test_alma9
       pre_run_script: |
-        sed -i -e "s/client_id='your OAuth application ID'/client_id='$SECRET_01'/g" \
-               -e "s/client_secret_key='your OAuth application secret'/client_secret_key='SECRET_02'/g" ./scripts/api_download.py
+        sed -i -e "s/client_id='your OAuth application ID'/client_id='$secret_01'/g" \
+               -e "s/client_secret_key='your OAuth application secret'/client_secret_key='secret_02'/g" ./scripts/api_download.py
     secrets:
-      SECRET_01: ${{ secrets.SIDEFX_CLIENT_ID }}
-      SECRET_02: ${{ secrets.SIDEFX_CLIENT_SECRET }}
+      secret_01: ${{ secrets.SIDEFX_CLIENT_ID }}
+      secret_02: ${{ secrets.SIDEFX_CLIENT_SECRET }}
 
 ...
