@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # Download the file
     local_filename = latest_release['filename']
     r = requests.get(latest_release['download_url'], stream=True)
-    downloads_dir = "../"
+    downloads_dir = "/tmp"
     download_path = os.path.join(downloads_dir, local_filename)
 
     if r.status_code == 200:
