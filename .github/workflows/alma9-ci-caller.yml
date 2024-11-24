@@ -26,5 +26,8 @@ jobs:
     uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci.yml@main
     with:
       scenario_name: test_alma9
+      pre_run_script: |
+        sed -i -e "s/client_id='your OAuth application ID'/client_id='${{ secrets.SIDEFX_CLIENT_ID }}'/g" \
+               -e "s/client_secret_key='your OAuth application secret'/client_secret_key='${{ secrets.SIDEFX_CLIENT_SECRET }}'/g" ./scripts/api_download.py
 
 ...
