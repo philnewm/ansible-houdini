@@ -40,7 +40,7 @@
         path: "/tmp/scripts/"
         state: absent
 
-- name: Get installer
+- name: Get local installer
   when: local_installer_path.stat.exists
   ansible.builtin.copy:
     src: "{{ local_installer_path }}"
