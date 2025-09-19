@@ -1,10 +1,11 @@
 ---
 
-# vars file for ansible-role-template
-
+api_download_python_modules:
+  - python3-requests
+  - python3-click
 
 dependencies:
-  "RedHat": 
+  "RedHat":
     - python3-psutil
     - bc
     - libXScrnSaver
@@ -17,7 +18,8 @@ dependencies:
     - xorg-x11-utils
     - xmessage
     - mesa-demos
-  "Debian": 
+    - libglvnd-opengl
+  "Debian":
     - python3-psutil
     - bc
     - libxss1
@@ -34,7 +36,7 @@ dependencies:
 
 selinux_packages:
   - policycoreutils-devel
-  - rpmbuild-order.x86_64
-  - chkconfig
+  # - rpmbuild-order.x86_64
+  # - chkconfig
 
 ...

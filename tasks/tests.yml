@@ -1,5 +1,53 @@
 ---
 
-# tests to verify role functionality
+- name: Test houdini
+  ansible.builtin.command:
+    cmd: houdini --version
+  changed_when: false
+
+- name: Get houdini uninstaller
+  ansible.builtin.stat:
+    path: "{{ houdin_install_dir }}/houdini.uninstall"
+  register: houdini_installation_path
+
+- name: Test houdini install path
+  ansible.builtin.assert:
+    that:
+      - houdini_installation_path.stat.exists
+    fail_msg: "Failed to find houdini install directory {{ houdin_install_dir }}"
+    quiet: true
+
+- name: Get license manager service status
+  ansible.builtin.command:
+    cmd: "systemctl is-active sesinetd"
+  changed_when: false
+  register: sesinetd_status
+
+- name: Test sesinetd service state
+  ansible.builtin.assert:
+    that:
+      - sesinetd_status.stdout == "active"
+    fail_msg: "Expected state active for service 'sesinetd.service', got: {{ sesinetd_status.stdout }}"
+    quiet: true
+
+- name: Check SELinux module
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Get selinux module
+      become: true
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          semodule -l | grep sesinetd
+        executable: /bin/bash
+      changed_when: false
+      register: selinux_module_result
+
+    - name: Test selinux module
+      ansible.builtin.assert:
+        that:
+          - selinux_module_result.stdout == "sesinetd"
+        fail_msg: "Faield to find selinux module for 'sesinetd'"
+        quiet: true
 
 ...

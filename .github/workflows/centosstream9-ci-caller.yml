@@ -23,8 +23,8 @@ permissions:
 
 jobs:
   centosstream9-ci:
-    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci.yml@main
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
     with:
-      scenario_name: test_centosstream9
+      scenario_name: centosstream9
 
 ...

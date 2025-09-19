@@ -1,5 +1,13 @@
 ---
 
+# https://www.sidefx.com/faq/question/how-do-i-add-the-license-server-sesinetd-to-selinux/
+
+- name: Start sesinetd service
+  become: true
+  ansible.builtin.systemd_service:
+    name: sesinetd.service
+    state: started
+
 - name: Install selinux mod dependencies
   become: true
   loop: "{{ selinux_packages }}"
@@ -7,75 +15,71 @@
     name: "{{ item }}"
     state: present
 
-- name: Copy service file
+- name: Get selinux module
   become: true
-  ansible.builtin.copy:
-    src: "/usr/lib/sesi/sesinetd.service"
-    dest: "/usr/lib/systemd/system/sesinetd.service"
-    remote_src: true
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      semodule -l | grep sesinetd
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+  register: selinux_module_result
 
-- name: Reload systemd manager configuration
-  become: true
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
+- name: Test selinux module
+  when: selinux_module_result.stdout != "sesinetd"
+  block:
+    - name: Create temp directory
+      become: true
+      ansible.builtin.file:
+        path: /tmp/sesinetd-selinux
+        state: directory
+        mode: "0755"
 
-- name: Start sesinetd service
-  become: true
-  ansible.builtin.systemd:
-    name: sesinetd
-    state: started
-    enabled: true
+    - name: Get and extract .zip file
+      become: true
+      ansible.builtin.unarchive:
+        src: "https://media.sidefx.com/uploads/support/faq/selinux.zip"
+        dest: "{{ license_selinux_module_tmp_dir }}"
+        creates: "{{ license_selinux_module_tmp_dir }}/selinux/sesinetd_selinux.sh"
+        mode: "0755"
+        remote_src: true
 
-- name: Check status of sesinetd service
-  become: true
-  ansible.builtin.command:
-    cmd: systemctl status sesinetd
-  register: sesinetd_status
-  ignore_errors: true
+    - name: Build SELinux policy with make
+      become: true
+      community.general.make:
+        chdir: "{{ license_selinux_module_tmp_dir }}/selinux"
+        file: /usr/share/selinux/devel/Makefile
+        target: all
 
-- name: Display sesinetd service status
-  ansible.builtin.debug:
-    var: sesinetd_status.stdout
+    - name: Check if sesinetd SELinux module is installed
+      become: true
+      ansible.builtin.command:
+        cmd: semodule -l
+      register: semodule_list
+      changed_when: false
 
-- name: Create temp directory
-  ansible.builtin.file:
-    path: /tmp/sesinetd-selinux
-    state: directory
-    mode: "0755"
+    - name: Install SELinux policy module
+      become: true
+      when: "'sesinetd' not in semodule_list.stdout_lines"
+      ansible.builtin.command:
+        cmd: semodule -i {{ license_selinux_module_tmp_dir }}/selinux/sesinetd.pp
+      register: install_result
+      changed_when: install_result.rc == 0
 
-- name: Generate selinux policy for sesinetd
-  become: true
-  ansible.builtin.command:
-    cmd: "sepolicy generate --init /usr/lib/sesi/sesinetd"
-    chdir: "/tmp/sesinetd-selinux"
-
-- name: Run selinux policy for sesinetd
-  become: true
-  ansible.builtin.command:
-    cmd: "./sesinetd.sh"
-    chdir: "/tmp/sesinetd-selinux"
-
-- name: Restore selinux to systems selinux policy
-  become: true
-  ansible.builtin.command:
-    cmd: "restorecon -v /usr/lib/sesi/sesinetd /usr/lib/systemd/system"
-
-- name: Reload systemd manager configuration
-  become: true
-  ansible.builtin.command:
-    cmd: systemctl daemon-reload
+    - name: Assign TCP port 1715 to sesinetd_port_t
+      become: true
+      community.general.seport:
+        ports: 1715
+        proto: tcp
+        setype: sesinetd_port_t
+        state: present
 
 - name: Remove temp directory
   become: true
   ansible.builtin.file:
-    path: /tmp/sesinetd-selinux
-    state: absent
-
-- name: Remove selinux mod dependencies
-  become: true
-  loop: "{{ selinux_packages }}"
-  ansible.builtin.package:
-    name: "{{ item }}"
+    path: "{{ license_selinux_module_tmp_dir }}"
     state: absent
 
 ...

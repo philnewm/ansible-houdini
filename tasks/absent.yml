@@ -1,7 +1,53 @@
 ---
 
-# Uninstall and cleanup tasks
+- name: "Uninstall houdini version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+  become: true
+  ansible.builtin.shell:
+    cmd: "printf 'yes\n' | {{ houdin_install_dir }}/houdini.uninstall"
+    removes: "{{ houdin_install_dir }}/houdini.uninstall"
 
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+# - name: Stop sesinetd service
+#   become: true
+#   when: '"sesinetd.service" in ansible_facts.services'
+#   ansible.builtin.systemd_service:
+#     name: sesinetd.service
+#     state: stopped
+
+- name: Stop and disable hqueue-server and client service
+  become: true
+  when: item in ansible_facts.services
+  loop:
+    - "hqueue-server.service"
+    - "hqueue-client.service"
+    - "sesinetd.service"
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    daemon_reload: true
+
+- name: Remove sesinetd service
+  become: true
+  ansible.builtin.file:
+    path: "/etc/rc.d/init.d/sesinetd"
+    state: "absent"
+
+- name: Remove sidefx directories
+  become: true
+  loop:
+    - /opt/hqueue
+    - /opt/sidefx
+    - /opt/sidefx_packages
+  ansible.builtin.file:
+    path: "{{ item }}"
+
+- name: Reload systemd service daemon
+  become: true
+  ansible.builtin.systemd_service:
+    daemon_reload: true
 
 - name: Remove unused dependencies
   become: true

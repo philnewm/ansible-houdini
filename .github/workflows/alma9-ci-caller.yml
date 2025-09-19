@@ -23,9 +23,9 @@ permissions:
 
 jobs:
   alma9-ci:
-    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci.yml@main
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
     with:
-      scenario_name: test_alma9
+      scenario_name: alma9
       houdini_role_pre_script: true
     secrets: inherit
 

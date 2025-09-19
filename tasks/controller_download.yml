@@ -1,0 +1,92 @@
+---
+
+- name: Get python version
+  ansible.builtin.command:
+    cmd: python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+  changed_when: false
+  register: python_version
+  delegate_to: localhost
+
+- name: Create venv
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ download_script_venv_path }}"
+    creates: "{{ download_script_venv_path }}/bin/activate"
+  delegate_to: localhost
+
+- name: Install pip module dependency
+  ansible.builtin.command:
+    cmd: "{{ download_script_venv_path }}/bin/python -m pip install packaging"
+    creates: "{{ download_script_venv_path }}/lib/python{{ python_version.stdout }}/site-packages/packaging"
+  delegate_to: localhost
+
+- name: Create venv for Houdini install script
+  ansible.builtin.pip:
+    name:
+      - pip
+      - click
+      - requests
+    state: present
+    virtualenv: "{{ download_script_venv_path }}"
+  delegate_to: localhost
+
+- name: Ensure temporary download dir exists on controller
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}"
+    state: "directory"
+    mode: "0755"
+    owner: "{{ lookup('env', 'USER') }}"
+  delegate_to: localhost
+
+- name: "Query package for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+  ansible.builtin.command:
+    cmd: >
+      {{ download_script_venv_path }}/bin/python api_download.py get-package-name
+      {{ sidefx_client_id }}
+      {{ sidefx_client_secret_key }}
+      {{ houdin_version }}
+      True
+    chdir: "{{ role_path }}/files"
+  changed_when: false
+  register: h_package_result
+  delegate_to: localhost
+
+- name: "Run download script for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+  ansible.builtin.command:
+    cmd: >
+      {{ download_script_venv_path }}/bin/python api_download.py get-setup
+      {{ sidefx_client_id }}
+      {{ sidefx_client_secret_key }}
+      {{ houdin_version }}
+      {{ houdini_build_number }}
+      {{ houdini_package_dir }}
+    chdir: "{{ role_path }}/files"
+    creates: "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
+  delegate_to: localhost
+
+- name: Ensure temporary install dir exists on remote host
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: Copy installer package to remote host
+  become: true
+  ansible.builtin.copy:
+    src: "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
+    dest: "{{ houdini_package_dir }}"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+# - name: Cleanup installer archive and venv on controller
+#   ansible.builtin.file:
+#     path:
+#       - "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
+#       - "{{ download_script_venv_path }}"
+#     state: absent
+#   delegate_to: localhost
+
+...

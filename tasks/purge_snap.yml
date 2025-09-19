@@ -1,0 +1,48 @@
+---
+
+- name: Stop snap service
+  become: true
+  ansible.builtin.systemd_service:
+    name: snapd
+    state: stopped
+    enabled: false
+    masked: true
+
+- name: Purge snapd
+  become: true
+  ansible.builtin.apt:
+    name: snapd
+    state: absent
+    autoremove: true
+    purge: true
+
+- name: Hold snapd package
+  become: true
+  ansible.builtin.dpkg_selections:
+    name: snapd
+    selection: hold
+
+- name: Prevent installation of snapd using apt pinning
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/apt/preferences.d/nosnap.pref
+    content: |
+      Package: snapd
+      Pin: release a=*
+      Pin-Priority: -10
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: "Remove leftover snap directories {{ item }}"
+  become: true
+  loop:
+    - /snap
+    - /var/snap
+    - /var/lib/snapd
+    - /var/cache/snapd
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+
+...

@@ -1,0 +1,56 @@
+---
+
+- name: Install dependencies
+  become: true
+  loop: "{{ dependencies[ansible_os_family] }}"
+  when: item not in ansible_facts.packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+
+- name: Set SELinux to permissive
+  when: ansible_os_family == "RedHat"
+  become: true
+  ansible.builtin.command:
+    cmd: setenforce 0
+  changed_when: false
+
+- name: Add hqueue-server directory
+  when: '"hqueue-server" in houdini_features'
+  ansible.builtin.set_fact:
+    houdini_flags: "{{ houdini_flags }} --hqueue-server-dir {{ hqueue_server_dir }}"
+
+- name: Add hqueue-client directory
+  when: '"hqueue-client" in houdini_features'
+  ansible.builtin.set_fact:
+    houdini_flags: "{{ houdini_flags }} --hqueue-client-user {{ hqueue_client_user }} --hqueue-client-dir {{ hqueue_client_dir }}"
+
+- name: Display houdini install flags
+  ansible.builtin.debug:
+    var: houdini_flags
+
+- name: Install houdini
+  become: true
+  ansible.builtin.command:
+    cmd: >-
+      ./houdini.install
+      --accept-EULA {{ eula_date }}
+      --install-houdini
+      --install-bin-symlink
+      --install-hfs-symlink
+      {{ houdini_flags }}
+      --auto-install
+      --make-dir {{ houdin_install_dir }}
+      {{ houdin_install_dir }}
+  args:
+    chdir: "{{ houdini_package_dir }}/{{ installer_extracted }}"
+    creates: "{{ houdin_install_dir }}/houdini.uninstall"
+
+- name: Cleanup installer directory
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}/{{ installer_extracted }}"
+    state: absent
+
+...

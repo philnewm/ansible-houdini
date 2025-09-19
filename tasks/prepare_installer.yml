@@ -1,0 +1,36 @@
+---
+
+- name: Run download
+  ansible.builtin.include_tasks:
+    file: "{{ download_method }}_download.yml"
+
+- name: Set extracted directory
+  ansible.builtin.set_fact:
+    installer_extracted: "{{ h_package_result.stdout | trim('.tar.gz') }}"
+
+- name: Create target dir
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}/{{ installer_extracted }}"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: Extract houdini installer
+  become: true
+  ansible.builtin.unarchive:
+    src: "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
+    dest: "{{ houdini_package_dir }}/{{ installer_extracted }}"
+    creates: "{{ houdini_package_dir }}/{{ installer_extracted }}/houdini.install"
+    remote_src: true
+    extra_opts:
+      - "--strip-components=1"
+
+- name: Cleanup installer archive
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
+    state: absent
+
+...

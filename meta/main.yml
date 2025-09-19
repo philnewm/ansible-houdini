@@ -2,9 +2,9 @@
 
 galaxy_info:
   role_name: houdini
-  author: author_name
+  author: philnewm
   description: ansible-role-template description
-  license: some_license
+  license: MIT
   min_ansible_version: "2.1"
   platforms:
     - name: EL

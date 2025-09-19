@@ -1,98 +1,40 @@
 ---
 
-# Install tasks
-# INFO larger roles should only use **include_tasks** here
+- name: Gather package facts
+  ansible.builtin.package_facts:
 
+# INFO only required to free up some space in vbox vm
+- name: Purge snap on ubuntu
+  when: ansible_distribution == "Ubuntu" and "snapd" in ansible_facts.packages
+  ansible.builtin.include_tasks:
+    file: purge_snap.yml
 
-# - name: "Install houdini {{ version }}"
-#   when: not houdini_path.stat.exists
-#   ansible.builtin.include_tasks:
-#     file: dependencies.yml
+- name: Check for env vars
+  ansible.builtin.assert:
+    that:
+      - sidefx_client_id is defined
+      - sidefx_client_secret_key is defined
+    fail_msg: "Houdini download api credentials not defined"
+    quiet: true
 
-- name: Check for houdini install
+- name: Check for houdini uninstaller
   ansible.builtin.stat:
-    path: "{{ local_installer_path }}"
-  register: local_installer_path
+    path: "{{ houdin_install_dir }}/houdini.uninstall"
+  register: houdini_installation_path
 
 - name: Get remote houdini installer
-  when: not local_installer_path.stat.exists
-  block:
-    - name: Install python modules
-      become: true
-      loop: "{{ api_download_python_modules }}"
-      ansible.builtin.package:
-        name: "{{ item }}"
-        state: present
-
-    - name: Copy download scripts to remote host
-      ansible.builtin.copy:
-        src: "scripts/"
-        dest: "/tmp/scripts/"
-        remote_src: no
-
-    - name: Get Houdini installer
-      ansible.builtin.command:
-        cmd: python3 api_download.py
-        chdir: "/tmp/scripts/"
-
-    - name: Remove scripts
-      ansible.builtin.file:
-        path: "/tmp/scripts/"
-        state: absent
-
-- name: Get local installer
-  when: local_installer_path.stat.exists
-  ansible.builtin.copy:
-    src: "{{ local_installer_path }}"
-    dest: "/tmp/{{ install_name }}.tar.gz"
-
-- name: Create install dir
-  ansible.builtin.file:
-    path: /tmp/{{ install_name }}
-    state: directory
-    mode: "0755"
-
-- name: "Install Dependencies"
+  when: not houdini_installation_path.stat.exists
   ansible.builtin.include_tasks:
-    file: dependencies.yml 
+    file: prepare_installer.yml
 
-- name: Extract houdini installer
-  ansible.builtin.unarchive:
-    src: "/tmp/{{ install_name }}.tar.gz"
-    dest: "/tmp/{{ install_name }}"
-    creates: "/tmp/{{ install_name }}/houdini.install"
-    remote_src: yes
-    extra_opts:
-      - "--strip-components=1"
-
-- name: Cleanup installer archive
-  ansible.builtin.file:
-    path: "/tmp/{{ install_name }}.tar.gz"
-    state: absent
-
-- name: Set SELinux to permissive
-  when: ansible_os_family == "RedHat"
-  become: true
-  ansible.builtin.command:
-    cmd: setenforce 0
-  changed_when: false
-
-- name: Install houdini
-  become: true
-  ansible.builtin.command:
-    cmd: ./houdini.install --accept-EULA {{ eula_date }} --install-houdini --install-menus --install-hfs-symlink --install-license --install-avahi --install-sidefxlabs --auto-install --make-dir {{ install_path }}
-  args:
-    chdir: "/tmp/{{ install_name }}"
-    creates: "{{ install_path }}"
-
-- name: Cleanup installer directory
-  ansible.builtin.file:
-    path: "/tmp/{{ install_name }}"
-    state: absent
+- name: "Include installer"
+  when: not houdini_installation_path.stat.exists
+  ansible.builtin.include_tasks:
+    file: run_installer.yml
 
 - name: Configure license manager with selinux
   when: ansible_os_family == "RedHat"
   ansible.builtin.include_tasks:
-    file: local_license_manager_setup.yml 
+    file: local_license_manager_setup.yml
 
 ...
