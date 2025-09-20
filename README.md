@@ -10,33 +10,38 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
 
 ```code
 📦 ansible-houdini
- ┣ 📂 defaults
- ┃ ┗ 📜 main.yml
- ┣ 📂 files
- ┃ ┗ 📜 file_placeholder.yml
- ┣ 📂 handlers
- ┃ ┗ 📜 main.yml
- ┣ 📂 meta
- ┃ ┗ 📜 main.yml
+ ┣ 📂defaults
+ ┃ ┗ 📜main.yml
+ ┣ 📂files
+ ┃ ┣ 📜api_download.py
+ ┃ ┗ 📜sidefx.py
+ ┣ 📂meta
+ ┃ ┗ 📜main.yml
  ┣ 📂 molecule
  ┃ ┗ 📂 default
  ┃   ┗ 📜, 📜, 📜, scenario_files
- ┣ 📂 tasks
- ┃ ┣ 📜 main.yml
- ┃ ┣ 📜 present.yml
- ┃ ┣ 📜 dependencies.yml
- ┃ ┣ 📜 absent.yml
- ┃ ┗ 📜 init.yml
- ┣ 📂 templates
- ┃ ┗ ⛩️ template.j2
- ┣ 📂 vars
- ┃ ┗ 📜 main.yml
- ┗ 🗒️ README.md
- ┗ 📓 requirements.txt
+ ┣ 📂tasks
+ ┃ ┣ 📜absent.yml
+ ┃ ┣ 📜controller_download.yml
+ ┃ ┣ 📜dependencies.yml
+ ┃ ┣ 📜local_license_manager_setup.yml
+ ┃ ┣ 📜main.yml
+ ┃ ┣ 📜prepare_installer.yml
+ ┃ ┣ 📜present.yml
+ ┃ ┣ 📜purge_snap.yml
+ ┃ ┣ 📜remote_download.yml
+ ┃ ┣ 📜run_installer.yml
+ ┃ ┗ 📜tests.yml
+ ┣ 📂vars
+ ┃ ┗ 📜main.yml
+ ┣ 📜.gitignore
+ ┣ 📜.gitmodules
+ ┣ 📜README.md
+ ┗ 📜requirements.yml
 
 ```
 
-Describe and explain role structure. 
+Describe and explain role structure.
 
 ## Requirements
 
