@@ -26,5 +26,8 @@ jobs:
     uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
     with:
       scenario_name: ubuntu2204
+      env_string: |
+        SIDEFX_CLIENT_ID=${{ secrets.SIDEFX_CLIENT_ID }}
+        SIDEFX_CLIENT_SECRET_KEY=${{ secrets.SIDEFX_CLIENT_SECRET }}
 
 ...
