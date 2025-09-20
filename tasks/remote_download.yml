@@ -1,20 +1,23 @@
 ---
 
-- name: Get python version
-  ansible.builtin.command:
-    cmd: python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-  changed_when: false
-  register: python_version
+- name: Install pip dependency
+  become: true
+  ansible.builtin.package:
+    name: python3-packaging
+    state: "present"
+
+- name: Install python venv
+  become: true
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    name: python3.10-venv
+    state: "present"
+    update_cache: true
 
 - name: Create venv
   ansible.builtin.command:
     cmd: "python3 -m venv {{ download_script_venv_path }}"
     creates: "{{ download_script_venv_path }}/bin/activate"
-
-- name: Install pip module dependency
-  ansible.builtin.command:
-    cmd: "{{ download_script_venv_path }}/bin/python -m pip install packaging"
-    creates: "{{ download_script_venv_path }}/lib/python{{ python_version.stdout }}/site-packages/packaging"
 
 - name: Create venv for Houdini install script
   ansible.builtin.pip:
@@ -55,7 +58,7 @@
       {{ sidefx_client_secret_key }}
       {{ houdin_version }}
       True
-    chdir: "{{ role_path }}/files"
+    chdir: "{{ houdini_package_dir }}"
   changed_when: false
   register: h_package_result
 

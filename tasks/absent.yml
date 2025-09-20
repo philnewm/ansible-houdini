@@ -9,13 +9,6 @@
 - name: Gather service facts
   ansible.builtin.service_facts:
 
-# - name: Stop sesinetd service
-#   become: true
-#   when: '"sesinetd.service" in ansible_facts.services'
-#   ansible.builtin.systemd_service:
-#     name: sesinetd.service
-#     state: stopped
-
 - name: Stop and disable hqueue-server and client service
   become: true
   when: item in ansible_facts.services

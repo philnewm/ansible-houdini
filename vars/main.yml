@@ -19,6 +19,11 @@ dependencies:
     - xmessage
     - mesa-demos
     - libglvnd-opengl
+    - nss
+    - libXdamage
+    - alsa-lib
+    - libxkbfile
+    - desktop-file-utils
   "Debian":
     - python3-psutil
     - bc
@@ -33,6 +38,8 @@ dependencies:
     - libxcb-xfixes0
     - x11-utils
     - mesa-utils
+    - libasound2
+    - desktop-file-utils
 
 selinux_packages:
   - policycoreutils-devel

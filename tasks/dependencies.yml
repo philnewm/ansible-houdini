@@ -1,0 +1,19 @@
+---
+
+- name: Install epel repo
+  become: true
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
+- name: Install dependencies
+  become: true
+  loop: "{{ dependencies[ansible_os_family] }}"
+  when: item not in ansible_facts.packages
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+
+...

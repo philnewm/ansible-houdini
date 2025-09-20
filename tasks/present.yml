@@ -27,6 +27,17 @@
   ansible.builtin.include_tasks:
     file: prepare_installer.yml
 
+- name: "Include dependencies"
+  ansible.builtin.include_tasks:
+    file: dependencies.yml
+
+- name: Set SELinux to permissive
+  when: ansible_os_family == "RedHat" and not houdini_installation_path.stat.exists
+  become: true
+  ansible.posix.selinux:
+    policy: targeted
+    state: permissive
+
 - name: "Include installer"
   when: not houdini_installation_path.stat.exists
   ansible.builtin.include_tasks:
@@ -36,5 +47,12 @@
   when: ansible_os_family == "RedHat"
   ansible.builtin.include_tasks:
     file: local_license_manager_setup.yml
+
+- name: Set SELinux back to enforcing
+  when: ansible_os_family == "RedHat"
+  become: true
+  ansible.posix.selinux:
+    policy: targeted
+    state: enforcing
 
 ...

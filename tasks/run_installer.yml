@@ -1,21 +1,5 @@
 ---
 
-- name: Install dependencies
-  become: true
-  loop: "{{ dependencies[ansible_os_family] }}"
-  when: item not in ansible_facts.packages
-  ansible.builtin.package:
-    name: "{{ item }}"
-    state: present
-    update_cache: true
-
-- name: Set SELinux to permissive
-  when: ansible_os_family == "RedHat"
-  become: true
-  ansible.builtin.command:
-    cmd: setenforce 0
-  changed_when: false
-
 - name: Add hqueue-server directory
   when: '"hqueue-server" in houdini_features'
   ansible.builtin.set_fact:
@@ -28,7 +12,16 @@
 
 - name: Display houdini install flags
   ansible.builtin.debug:
-    var: houdini_flags
+    msg: |
+      ./houdini.install
+      --accept-EULA {{ eula_date }}
+      --install-houdini
+      --install-bin-symlink
+      --install-hfs-symlink
+      {{ houdini_flags }}
+      --auto-install
+      --make-dir {{ houdin_install_dir }}
+      {{ houdin_install_dir }}
 
 - name: Install houdini
   become: true
