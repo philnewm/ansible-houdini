@@ -9,6 +9,37 @@
 - name: Gather service facts
   ansible.builtin.service_facts:
 
+- name: Remove selinux module
+  when: ansible_os_family == "RedHat"
+  block:
+    - name: Get selinux module
+      become: true
+      when: ansible_os_family == "RedHat"
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          semodule -l | grep sesinetd
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+      register: selinux_module_result
+
+    - name: Remove TCP port 1715 assignment from selinux
+      become: true
+      community.general.seport:
+        ports: 1715
+        proto: tcp
+        setype: sesinetd_port_t
+        state: absent
+
+    - name: Remove SELinux policy module for sesinetd
+      become: true
+      when: selinux_module_result.stdout == "sesinetd"
+      ansible.builtin.command:
+        cmd: semodule -r sesinetd
+      register: remove_module_result
+      changed_when: remove_module_result.rc == 0
+
 - name: Stop and disable hqueue-server and client service
   become: true
   when: item in ansible_facts.services
