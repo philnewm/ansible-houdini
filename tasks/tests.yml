@@ -51,7 +51,7 @@
       ansible.builtin.assert:
         that:
           - selinux_module_result.stdout == "sesinetd"
-        fail_msg: "Faield to find selinux module for 'sesinetd'"
+        fail_msg: "Failed to find selinux module for 'sesinetd'"
         quiet: true
 
 ...
