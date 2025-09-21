@@ -10,7 +10,7 @@
   ansible.builtin.service_facts:
 
 - name: Remove selinux module
-  when: ansible_os_family == "RedHat"
+  when: ansible_os_family == "RedHat" and "license" in houdini_features
   block:
     - name: Get selinux module
       become: true
