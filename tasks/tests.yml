@@ -47,6 +47,7 @@
           register: selinux_module_result
 
     - name: Test selinux module
+      when: ansible_os_family == "RedHat"
       ansible.builtin.assert:
         that:
           - selinux_module_result.stdout == "sesinetd"
