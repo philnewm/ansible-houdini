@@ -10,7 +10,7 @@ houdini_production_only: true
 houdini_package_dir: "/tmp/houdini_{{ houdini_version }}.{{ houdini_build_number }}_package"
 houdini_install_dir: "/opt/hfs{{ houdini_version }}.{{ houdini_build_number }}"
 
-download_method: "controller"
+download_method: "remote"
 download_script_venv_path: "/tmp/python_venv/temp_ansible_venv"
 
 houdini_features:
