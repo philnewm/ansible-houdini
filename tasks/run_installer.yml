@@ -20,8 +20,8 @@
       --install-hfs-symlink
       {{ houdini_flags }}
       --auto-install
-      --make-dir {{ houdin_install_dir }}
-      {{ houdin_install_dir }}
+      --make-dir {{ houdini_install_dir }}
+      {{ houdini_install_dir }}
 
 - name: Install houdini
   become: true
@@ -34,16 +34,18 @@
       --install-hfs-symlink
       {{ houdini_flags }}
       --auto-install
-      --make-dir {{ houdin_install_dir }}
-      {{ houdin_install_dir }}
+      --make-dir {{ houdini_install_dir }}
+      {{ houdini_install_dir }}
   args:
     chdir: "{{ houdini_package_dir }}/{{ installer_extracted }}"
-    creates: "{{ houdin_install_dir }}/houdini.uninstall"
+    creates: "{{ houdini_install_dir }}/houdini.uninstall"
 
-- name: Cleanup installer directory
+- name: Cleanup installer
   become: true
   ansible.builtin.file:
-    path: "{{ houdini_package_dir }}/{{ installer_extracted }}"
+    path:
+      - "{{ houdini_package_dir }}/{{ installer_extracted }}"
+      - "{{ houdini_package_dir }}/{{ installer_extracted }}.tar.gz"
     state: absent
 
 ...

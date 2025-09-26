@@ -1,0 +1,110 @@
+---
+
+- name: Install pip dependency
+  become: true
+  ansible.builtin.package:
+    name: python3-packaging
+    state: "present"
+
+- name: Install python venv
+  become: true
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    name: "{{ venv_package[ansible_distribution] }}"
+    state: "present"
+    update_cache: true
+
+- name: Create venv
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ download_script_venv_path }}"
+    creates: "{{ download_script_venv_path }}/bin/activate"
+
+- name: Create venv for Houdini install script
+  ansible.builtin.pip:
+    name:
+      - pip
+      - click
+      - requests
+    state: present
+    virtualenv: "{{ download_script_venv_path }}"
+    virtualenv_command: "python3 -m venv"
+
+- name: Copy sidefx download api script
+  become: true
+  loop:
+    - "sidefx.py"
+    - "api_download.py"
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ houdini_package_dir }}/{{ item }}"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: Get houdini license server code
+  ansible.builtin.shell:
+    cmd: |
+      source houdini_setup_bash
+      sesictrl print-server
+    chdir: "{{ houdini_install_dir }}"
+    executable: "/bin/bash"
+  changed_when: false
+  register: license_server_result
+
+- name: Set license server code
+  ansible.builtin.set_fact:
+    license_server_code: "{{ license_server_result.stdout_lines[2].split()[2] }}"
+
+- name: "Get apprentice license key"
+  become: true
+  ansible.builtin.command:
+    cmd: >
+      {{ download_script_venv_path }}/bin/python api_download.py get-non-commercial-license-key
+      {{ sidefx_client_id }}
+      {{ sidefx_client_secret_key }}
+      {{ ansible_fqdn }}
+      {{ license_server_code }}
+      {{ houdini_version }}
+    chdir: "{{ houdini_package_dir }}"
+  changed_when: false
+  register: h_license_result
+
+- name: Display license
+  ansible.builtin.debug:
+    msg: "{{ h_license_result.stdout | from_json }}"
+
+# - name: Read installed licenses
+#   become: true
+#   ansible.builtin.slurp:
+#     src: /usr/lib/sesi/licenses
+#   register: installed_license_file
+
+# - name: Get installed license prefixes
+#   become: true
+#   ansible.builtin.command:
+#     cmd: awk '/^LICENSE/ {print $1, $2, $3, $4}' /usr/lib/sesi/licenses
+#   register: installed_license_result
+#   changed_when: false
+
+# - name: Display installed licenses
+#   ansible.builtin.debug:
+#     var: installed_license_result.stdout_lines
+
+# - name: Split part
+#   loop: "{{ h_license_result.stdout | from_json }}"
+#   ansible.builtin.debug:
+#     msg: "{{ (item.split()[0:4]) | join(' ') }}"
+
+- name: Install apprentice licenses
+  become: true
+  loop: "{{ h_license_result.stdout | from_json }}"
+  ansible.builtin.shell:
+    cmd: |
+      source houdini_setup_bash
+      sesictrl install {{ item }}
+    chdir: "{{ houdini_install_dir }}"
+    executable: "/bin/bash"
+  register: license_result
+  changed_when: license_result.rc == 0
+
+...

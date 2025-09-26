@@ -37,26 +37,26 @@
     owner: "{{ lookup('env', 'USER') }}"
   delegate_to: localhost
 
-- name: "Query package for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+- name: "Query package for version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   ansible.builtin.command:
     cmd: >
       {{ download_script_venv_path }}/bin/python api_download.py get-package-name
       {{ sidefx_client_id }}
       {{ sidefx_client_secret_key }}
-      {{ houdin_version }}
+      {{ houdini_version }}
       True
     chdir: "{{ role_path }}/files"
   changed_when: false
   register: h_package_result
   delegate_to: localhost
 
-- name: "Run download script for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+- name: "Run download script for version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   ansible.builtin.command:
     cmd: >
       {{ download_script_venv_path }}/bin/python api_download.py get-setup
       {{ sidefx_client_id }}
       {{ sidefx_client_secret_key }}
-      {{ houdin_version }}
+      {{ houdini_version }}
       {{ houdini_build_number }}
       {{ houdini_package_dir }}
     chdir: "{{ role_path }}/files"

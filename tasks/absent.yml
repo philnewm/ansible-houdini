@@ -1,10 +1,10 @@
 ---
 
-- name: "Uninstall houdini version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+- name: "Uninstall houdini version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   become: true
   ansible.builtin.shell:
-    cmd: "printf 'yes\n' | {{ houdin_install_dir }}/houdini.uninstall"
-    removes: "{{ houdin_install_dir }}/houdini.uninstall"
+    cmd: "printf 'yes\n' | {{ houdini_install_dir }}/houdini.uninstall"
+    removes: "{{ houdini_install_dir }}/houdini.uninstall"
 
 - name: Gather service facts
   ansible.builtin.service_facts:
@@ -67,6 +67,7 @@
     - /opt/sidefx_packages
   ansible.builtin.file:
     path: "{{ item }}"
+    state: absent
 
 - name: Reload systemd service daemon
   become: true

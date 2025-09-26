@@ -3,13 +3,13 @@
 - name: Gather package facts
   ansible.builtin.package_facts:
 
-# INFO only required to free up some space in vbox vm
+# INFO only required to free up some space in ubuntu vbox vm
 - name: Purge snap on ubuntu
   when: ansible_distribution == "Ubuntu" and "snapd" in ansible_facts.packages
   ansible.builtin.include_tasks:
     file: purge_snap.yml
 
-- name: Check for env vars
+- name: Check for credentials
   ansible.builtin.assert:
     that:
       - sidefx_client_id is defined
@@ -17,9 +17,9 @@
     fail_msg: "Houdini download api credentials not defined"
     quiet: true
 
-- name: Check for houdini uninstaller
+- name: Check for existing houdini install
   ansible.builtin.stat:
-    path: "{{ houdin_install_dir }}/houdini.uninstall"
+    path: "{{ houdini_install_dir }}/houdini.uninstall"
   register: houdini_installation_path
 
 - name: Get remote houdini installer
@@ -43,6 +43,16 @@
   ansible.builtin.include_tasks:
     file: run_installer.yml
 
+- name: Check for existing houdini license file
+  ansible.builtin.stat:
+    path: "/usr/lib/sesi/licenses"
+  register: h_license_file
+
+- name: Inlcude apprentice license
+  when: not h_license_file.stat.exists
+  ansible.builtin.include_tasks:
+    file: apprentice_license.yml
+
 - name: Configure license manager with selinux
   when: ansible_os_family == "RedHat" and "license" in houdini_features
   ansible.builtin.include_tasks:
@@ -54,5 +64,14 @@
   ansible.posix.selinux:
     policy: targeted
     state: enforcing
+
+- name: Cleanup
+  become: true
+  ansible.builtin.file:
+    path:
+      - "{{ download_script_venv_path }}"
+      - "{{ license_selinux_module_tmp_dir }}"
+      - "{{ houdini_package_dir }}"
+    state: absent
 
 ...

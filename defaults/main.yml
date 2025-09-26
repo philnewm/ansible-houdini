@@ -4,13 +4,13 @@ state: present
 
 sidefx_client_id: "{{ lookup('ansible.builtin.env', 'SIDEFX_CLIENT_ID', default=undef()) }}"
 sidefx_client_secret_key: "{{ lookup('ansible.builtin.env', 'SIDEFX_CLIENT_SECRET_KEY', default=undef()) }}"
-houdin_version: "21.0"
+houdini_version: "21.0"
 houdini_build_number: "440"
 houdini_production_only: true
-houdini_package_dir: "/tmp/houdini_{{ houdin_version }}.{{ houdini_build_number }}_package"
-houdin_install_dir: "/opt/hfs{{ houdin_version }}.{{ houdini_build_number }}"
+houdini_package_dir: "/tmp/houdini_{{ houdini_version }}.{{ houdini_build_number }}_package"
+houdini_install_dir: "/opt/hfs{{ houdini_version }}.{{ houdini_build_number }}"
 
-download_method: "remote"
+download_method: "controller"
 download_script_venv_path: "/tmp/python_venv/temp_ansible_venv"
 
 houdini_features:
@@ -18,7 +18,7 @@ houdini_features:
   - engine-unity
   - engine-unreal
   - menus
-  - license
+  # - license
   - avahi
   - sidefxlabs
   - hqueue-server
@@ -34,5 +34,10 @@ eula_date: "2021-10-13"
 install_name: houdini-{{ version }}-linux_x86_64_gcc11.2
 
 license_selinux_module_tmp_dir: "/tmp/sesinetd-selinux"
+houdini_apprentice_license: true
+
+venv_package:
+  Debian: "python3-venv"
+  Ubuntu: "python3.10-venv"
 
 ...

@@ -40,10 +40,10 @@ dependencies:
     - mesa-utils
     - libasound2
     - desktop-file-utils
+    - libnss3
 
 selinux_packages:
   - policycoreutils-devel
-  # - rpmbuild-order.x86_64
-  # - chkconfig
+  - rpmbuild-order.x86_64
 
 ...

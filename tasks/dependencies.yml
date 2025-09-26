@@ -7,12 +7,20 @@
     name: epel-release
     state: present
 
-- name: Install dependencies
+- name: Install houdini dependencies
   become: true
   loop: "{{ dependencies[ansible_os_family] }}"
   when: item not in ansible_facts.packages
   ansible.builtin.package:
     name: "{{ item }}"
+    state: present
+    update_cache: true
+
+- name: Install sesinetd dependencies
+  become: true
+  when: '"chkconfig" not in ansible_facts.packages and ansible_os_family == "RedHat"'
+  ansible.builtin.package:
+    name: "chkconfig"
     state: present
     update_cache: true
 

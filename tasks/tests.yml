@@ -7,14 +7,14 @@
 
 - name: Get houdini uninstaller
   ansible.builtin.stat:
-    path: "{{ houdin_install_dir }}/houdini.uninstall"
+    path: "{{ houdini_install_dir }}/houdini.uninstall"
   register: houdini_installation_path
 
 - name: Test houdini install path
   ansible.builtin.assert:
     that:
       - houdini_installation_path.stat.exists
-    fail_msg: "Failed to find houdini install directory {{ houdin_install_dir }}"
+    fail_msg: "Failed to find houdini install directory {{ houdini_install_dir }}"
     quiet: true
 
 - name: Check license manager

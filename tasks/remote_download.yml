@@ -10,7 +10,7 @@
   become: true
   when: ansible_os_family == "Debian"
   ansible.builtin.apt:
-    name: python3.10-venv
+    name: "{{ venv_package[ansible_distribution] }}"
     state: "present"
     update_cache: true
 
@@ -50,35 +50,29 @@
     owner: "root"
     group: "root"
 
-- name: "Query package for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+- name: "Query package for version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   ansible.builtin.command:
     cmd: >
       {{ download_script_venv_path }}/bin/python api_download.py get-package-name
       {{ sidefx_client_id }}
       {{ sidefx_client_secret_key }}
-      {{ houdin_version }}
+      {{ houdini_version }}
       True
     chdir: "{{ houdini_package_dir }}"
   changed_when: false
   register: h_package_result
 
-- name: "Run download script for version {{ houdin_version ~ '.' ~ houdini_build_number }}"
+- name: "Run download script for version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   become: true
   ansible.builtin.command:
     cmd: >
       {{ download_script_venv_path }}/bin/python api_download.py get-setup
       {{ sidefx_client_id }}
       {{ sidefx_client_secret_key }}
-      {{ houdin_version }}
+      {{ houdini_version }}
       {{ houdini_build_number }}
       {{ houdini_package_dir }}
     chdir: "{{ houdini_package_dir }}"
     creates: "{{ houdini_package_dir }}/{{ h_package_result.stdout }}"
-
-- name: Cleanup installer venv on remote host
-  become: true
-  ansible.builtin.file:
-    path: "{{ download_script_venv_path }}"
-    state: absent
 
 ...
