@@ -22,9 +22,11 @@ This role includes a vagrant based molecule testing setup as a submodule at `mol
  ┃   ┗ 📜, 📜, 📜, scenario_files
  ┣ 📂tasks
  ┃ ┣ 📜absent.yml
+ ┃ ┣ 📜apprentice_license.yml
  ┃ ┣ 📜controller_download.yml
  ┃ ┣ 📜dependencies.yml
- ┃ ┣ 📜local_license_manager_setup.yml
+ ┃ ┣ 📜license_service_selinux.yml
+ ┃ ┣ 📜local_license_service.yml
  ┃ ┣ 📜main.yml
  ┃ ┣ 📜prepare_installer.yml
  ┃ ┣ 📜present.yml

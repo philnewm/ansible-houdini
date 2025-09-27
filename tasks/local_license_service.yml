@@ -1,0 +1,63 @@
+---
+
+- name: Get initd service file
+  ansible.builtin.stat:
+    path: "/etc/init.d/sesinetd"
+  register: initd_service_result
+
+- name: Stop sesinetd service
+  become: true
+  when: initd_service_result.stat.exists
+  ansible.builtin.service:
+    name: sesinetd
+    state: stopped
+
+- name: List processes matching sesinetd
+  become: true
+  ansible.builtin.command:
+    cmd: pgrep -a sesinetd
+  register: sesinetd_found
+  failed_when: sesinetd_found.rc not in [0, 1]
+  changed_when: false
+
+- name: Kill sesinetd processes if running
+  become: true
+  when: sesinetd_found.stdout_lines | length > 0 and initd_service_result.stat.exists
+  ansible.builtin.command:
+    cmd: pkill -f sesinetd
+  register: pkill_result
+  failed_when: pkill_result.rc not in [0, 1]
+  changed_when: pkill_result.rc == 0
+
+- name: Remove initd service file
+  become: true
+  ansible.builtin.file:
+    path: "/etc/init.d/sesinetd"
+    state: "absent"
+
+- name: Copy systemd sesinetd module
+  become: true
+  ansible.builtin.copy:
+    src: "/usr/lib/sesi/sesinetd.service"
+    dest: "/etc/systemd/system/sesinetd.service"
+    remote_src: true
+    mode: "0644"
+
+- name: Start sesinetd service
+  become: true
+  ansible.builtin.systemd_service:
+    name: sesinetd.service
+    enabled: true
+    state: started
+    daemon_reload: true
+
+- name: Get service facts
+  become: true
+  ansible.builtin.service_facts:
+
+- name: Test if the license service is running
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.services['sesinetd.service'].state == "running"
+
+...

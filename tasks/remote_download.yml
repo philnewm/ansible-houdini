@@ -5,6 +5,7 @@
   ansible.builtin.package:
     name: python3-packaging
     state: "present"
+    update_cache: true
 
 - name: Install python venv
   become: true

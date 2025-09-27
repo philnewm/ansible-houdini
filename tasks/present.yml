@@ -31,8 +31,13 @@
   ansible.builtin.include_tasks:
     file: dependencies.yml
 
+- name: Get systemd service file
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/sesinetd.service"
+  register: sesinetd_service_result
+
 - name: Set SELinux to permissive
-  when: ansible_os_family == "RedHat" and not houdini_installation_path.stat.exists
+  when: ansible_os_family == "RedHat" and not sesinetd_service_result.stat.exists
   become: true
   ansible.posix.selinux:
     policy: targeted
@@ -53,10 +58,15 @@
   ansible.builtin.include_tasks:
     file: apprentice_license.yml
 
-- name: Configure license manager with selinux
+- name: Include local license service
+  when: '"license" in houdini_features'
+  ansible.builtin.include_tasks:
+    file: local_license_service.yml
+
+- name: Register license service with selinux
   when: ansible_os_family == "RedHat" and "license" in houdini_features
   ansible.builtin.include_tasks:
-    file: local_license_manager_setup.yml
+    file: license_service_selinux.yml
 
 - name: Set SELinux back to enforcing
   when: ansible_os_family == "RedHat"

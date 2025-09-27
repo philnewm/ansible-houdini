@@ -56,7 +56,7 @@
 - name: Remove sesinetd service
   become: true
   ansible.builtin.file:
-    path: "/etc/rc.d/init.d/sesinetd"
+    path: "/etc/systemd/system/sesinetd.service"
     state: "absent"
 
 - name: Remove sidefx directories

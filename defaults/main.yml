@@ -18,7 +18,7 @@ houdini_features:
   - engine-unity
   - engine-unreal
   - menus
-  # - license
+  - license
   - avahi
   - sidefxlabs
   - hqueue-server
