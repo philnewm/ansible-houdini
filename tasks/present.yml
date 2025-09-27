@@ -63,17 +63,18 @@
   ansible.builtin.include_tasks:
     file: local_license_service.yml
 
-- name: Register license service with selinux
-  when: ansible_os_family == "RedHat" and "license" in houdini_features
-  ansible.builtin.include_tasks:
-    file: license_service_selinux.yml
+# INFO no policy provided for hserver, selinux permissive for now
+# - name: Register license service with selinux
+#   when: ansible_os_family == "RedHat" and "license" in houdini_features
+#   ansible.builtin.include_tasks:
+#     file: license_service_selinux.yml
 
-- name: Set SELinux back to enforcing
-  when: ansible_os_family == "RedHat"
-  become: true
-  ansible.posix.selinux:
-    policy: targeted
-    state: enforcing
+# - name: Set SELinux back to enforcing
+#   when: ansible_os_family == "RedHat"
+#   become: true
+#   ansible.posix.selinux:
+#     policy: targeted
+#     state: enforcing
 
 - name: Cleanup
   become: true

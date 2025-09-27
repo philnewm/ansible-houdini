@@ -44,6 +44,6 @@ dependencies:
 
 selinux_packages:
   - policycoreutils-devel
-  - rpmbuild-order.x86_64
+  - selinux-policy-devel
 
 ...

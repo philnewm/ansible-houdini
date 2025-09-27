@@ -1,6 +1,7 @@
 ---
 
 # https://www.sidefx.com/faq/question/how-do-i-add-the-license-server-sesinetd-to-selinux/
+# WARNING while this setup seems to work for sesinetd it doesn't work for hserver - which is required for hython
 
 - name: Install selinux mod dependencies
   become: true
