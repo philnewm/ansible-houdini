@@ -71,4 +71,14 @@
         setype: sesinetd_port_t
         state: present
 
+    - name: Restore SELinux context
+      become: true
+      loop:
+        - "/usr/lib/sesi/"
+        - "/var/log/sidefx/"
+      ansible.builtin.command:
+        cmd: restorecon -R "{{ item }}"
+      register: restorecon_sesi
+      changed_when: restorecon_sesi.rc == 0
+
 ...
