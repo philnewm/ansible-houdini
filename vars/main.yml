@@ -4,46 +4,98 @@ api_download_python_modules:
   - python3-requests
   - python3-click
 
-dependencies:
-  "RedHat":
-    - python3-psutil
-    - bc
-    - libXScrnSaver
-    - qt5-qtbase
-    - qt5-qtbase-gui
-    - libxcb
-    - libxcb-devel
-    - xcb-util
-    - xcb-util-keysyms
-    - xorg-x11-utils
-    - xmessage
-    - mesa-demos
-    - libglvnd-opengl
-    - nss
-    - libXdamage
-    - alsa-lib
-    - libxkbfile
-    - desktop-file-utils
-  "Debian":
-    - python3-psutil
-    - bc
-    - libxss1
-    - qtbase5-dev
-    - qtbase5-dev-tools
-    - libxcb1
-    - libx11-xcb1
-    - libxcb-keysyms1
-    - libxcb-render0
-    - libxcb-shape0
-    - libxcb-xfixes0
-    - x11-utils
-    - mesa-utils
-    - libasound2
-    - desktop-file-utils
-    - libnss3
+houdini_dependencies:
+  "21.0":  # https://www.sidefx.com/Support/system-requirements/houdini-210-linux-package-requirements/
+    redhat:
+      - alsa-lib
+      - cups-libs
+      - dbus-libs
+      - epel-release
+      - expat
+      - fontconfig
+      - glib2
+      - glibc
+      - libcurl
+      - libdrm
+      - libgcc
+      - libglvnd-egl
+      - libglvnd-glx
+      - libglvnd-opengl
+      - libICE
+      - libSM
+      - libstdc++
+      - libuuid
+      - libX11-xcb
+      - libX11-xcb
+      - libxcb
+      - libXcomposite
+      - libXdamage
+      - libXext
+      - libXfixes
+      - libXi
+      - libxkbcommon
+      - libxkbcommon-x11
+      - libxkbfile
+      - libXrandr
+      - libXrender
+      - libxshmfence
+      - libXt
+      - libXtst
+      - mesa-libGLU
+      - ncurses-libs
+      - nspr
+      - nss
+      - nss-util
+      - nxagent
+      - pciutils-libs
+      - xcb-util-cursor
+      - xcb-util-image
+      - xcb-util-keysyms
+      - xcb-util-renderutil
+      - xcb-util-wm
+    debian:
+      - libasound2t64
+      - libc6
+      - libcups2
+      - libcurl4
+      - libdbus-1-3
+      - libdrm2
+      - libegl1
+      - libexpat1
+      - libfontconfig1
+      - libgcc-s1
+      - libgl1
+      - libglib2.0-0
+      - libglu1-mesa
+      - libglx0
+      - libice6
+      - libncursesw6
+      - libnspr4
+      - libnss3
+      - libopengl0
+      - libpci3
+      - libsm6
+      - libxcb-cursor0
+      - libxcomposite1
+      - libxdamage1
+      - libxfixes3
+      - libxi6
+      - libxkbcommon0
+      - libxkbfile1
+      - libxrandr2
+      - libxrender1
+      - libxtst6
+      - zenity
 
 selinux_packages:
   - policycoreutils-devel
   - selinux-policy-devel
+
+houdini_venv_dependencies:
+  redhat:
+    - python3-packaging
+  debian:
+    - python3-packaging
+    - python3-venv
 
 ...

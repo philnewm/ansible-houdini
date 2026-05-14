@@ -3,29 +3,27 @@
 - name: "Uninstall houdini version {{ houdini_version ~ '.' ~ houdini_build_number }}"
   become: true
   ansible.builtin.shell:
-    cmd: "printf 'yes\n' | {{ houdini_install_dir }}/houdini.uninstall"
+    cmd: |
+      set -o pipefail
+      printf 'yes\n' | {{ houdini_install_dir }}/houdini.uninstall
     removes: "{{ houdini_install_dir }}/houdini.uninstall"
 
 - name: Gather service facts
   ansible.builtin.service_facts:
 
 - name: Remove selinux module
-  when: ansible_os_family == "RedHat" and "license" in houdini_features
+  when: ansible_facts.selinux.status == "enabled" and "license" in houdini_features
   block:
-    - name: Get selinux module
+    - name: Check installed module version
       become: true
-      when: ansible_os_family == "RedHat"
-      ansible.builtin.shell:
-        cmd: |
-          set -o pipefail
-          semodule -l | grep sesinetd
-        executable: /bin/bash
+      ansible.builtin.command:
+        cmd: semodule -l
+      register: semodule_list
       changed_when: false
-      failed_when: false
-      register: selinux_module_result
 
     - name: Remove TCP port 1715 assignment from selinux
       become: true
+      when: '"sesinetd" in semodule_list'
       community.general.seport:
         ports: 1715
         proto: tcp
@@ -73,10 +71,5 @@
   become: true
   ansible.builtin.systemd_service:
     daemon_reload: true
-
-- name: Remove unused dependencies
-  become: true
-  ansible.builtin.package:
-    autoremove: true
 
 ...

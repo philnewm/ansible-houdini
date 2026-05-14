@@ -1,14 +1,5 @@
 ---
 
-- name: Gather package facts
-  ansible.builtin.package_facts:
-
-# INFO only required to free up some space in ubuntu vbox vm
-- name: Purge snap on ubuntu
-  when: ansible_distribution == "Ubuntu" and "snapd" in ansible_facts.packages
-  ansible.builtin.include_tasks:
-    file: purge_snap.yml
-
 - name: Check for credentials
   ansible.builtin.assert:
     that:
@@ -17,72 +8,114 @@
     fail_msg: "Houdini download api credentials not defined"
     quiet: true
 
-- name: Check for existing houdini install
-  ansible.builtin.stat:
-    path: "{{ houdini_install_dir }}/houdini.uninstall"
-  register: houdini_installation_path
+- name: Verify houdini version
+  when: houdini_iso_url != ""
+  ansible.builtin.assert:
+    that:
+      - "houdini_version ~ '.' ~ houdini_build_number ~ '-linux_x86_64' in houdini_iso_url"
+    fail_msg: |
+      Failed to find requested version '{{ houdini_version }}.{{ houdini_build_number }}-linux_x86_64' in {{ houdini_iso_url }}.
 
-- name: Get remote houdini installer
-  when: not houdini_installation_path.stat.exists
-  ansible.builtin.include_tasks:
-    file: prepare_installer.yml
+      Is this the intended source?
+    quiet: true
 
-- name: "Include dependencies"
-  ansible.builtin.include_tasks:
-    file: dependencies.yml
-
-- name: Get systemd service file
-  ansible.builtin.stat:
-    path: "/etc/systemd/system/sesinetd.service"
-  register: sesinetd_service_result
-
-- name: Set SELinux to permissive
-  when: ansible_os_family == "RedHat" and not sesinetd_service_result.stat.exists
+- name: Check for existing houdini products
   become: true
-  ansible.posix.selinux:
-    policy: targeted
-    state: permissive
-
-- name: "Include installer"
-  when: not houdini_installation_path.stat.exists
-  ansible.builtin.include_tasks:
-    file: run_installer.yml
-
-- name: Check for existing houdini license file
+  loop: "{{ houdini_products | dict2items }}"
+  loop_control:
+    loop_var: product
+    label: "{{ product.key }}"
   ansible.builtin.stat:
-    path: "/usr/lib/sesi/licenses"
-  register: h_license_file
+    path: "{{ product.value.install_path }}"
+  register: product_install_paths
 
-- name: Inlcude apprentice license
-  when: not h_license_file.stat.exists
+- name: Remap product install paths to simple dict
+  ansible.builtin.set_fact:
+    products_query: >-
+      {{
+        dict(
+          product_install_paths.results
+          | map(attribute='product.key')
+          | zip(product_install_paths.results | map(attribute='stat.exists'))
+        )
+      }}
+
+- name: Get houdini artifacts
   ansible.builtin.include_tasks:
-    file: apprentice_license.yml
+    file: get_artifacts.yml
+
+- name: Install houdini launcher
+  become: true
+  when: not launcher_installation_path.stat.exists
+  ansible.builtin.command:
+    cmd: "./{{ launcher_filename }} --no-desktop-menus {{ houdini_launcher_dir }}"
+    chdir: "{{ houdini_package_dir }}"
+    creates: "{{ houdini_launcher_dir }}/uninstall_houdini_launcher.sh"
+
+- name: Install houdini products
+  loop: "{{ product_install_paths.results }}"
+  loop_control:
+    loop_var: houdini_product
+    label: "{{ houdini_product.product.key }}"
+  when: not houdini_product.stat.exists
+  ansible.builtin.include_tasks:
+    file: install_products.yml
+
+# TODO fix sidefx labs install source
+# - name: Check for existing sidefx labs
+#   ansible.builtin.stat:
+#     path: "{{ houdini_sidefx_labs_path }}/SideFXLabs{{ houdini_version }}"
+#   register: sidefxlabs_installation_path
+
+# - name: Include sidefx labs
+#   when: houdini_sidefx_labs and not sidefxlabs_installation_path.stat.exists
+#   ansible.builtin.include_tasks:
+#     file: install_sidefxlabs.yml
+
+- name: Install houdini dependencies
+  become: true
+  ansible.builtin.package:
+    name: "{{ houdini_dependencies[houdini_version][ansible_facts.os_family | lower] | difference(['epel-release'] if ansible_facts.distribution | lower == 'fedora' else []) }}"
+    state: present
+    update_cache: true
 
 - name: Include local license service
-  when: '"license" in houdini_features'
+  when: houdini_license_service
   ansible.builtin.include_tasks:
     file: local_license_service.yml
 
-- name: Register license service with selinux
-  when: ansible_os_family == "RedHat" and "license" in houdini_features
+- name: Inlcude apprentice license
+  when: houdini_apprentice_license
   ansible.builtin.include_tasks:
-    file: license_service_selinux.yml
+    file: apprentice_license.yml
 
-# INFO no policy provided for hserver, selinux permissive for now
-# - name: Set SELinux back to enforcing
-#   when: ansible_os_family == "RedHat"
-#   become: true
-#   ansible.posix.selinux:
-#     policy: targeted
-#     state: enforcing
+- name: Ensure selinux policy
+  when: ansible_facts.selinux.status == "enabled"
+  block:
+    - name: Check installed module version
+      become: true
+      ansible.builtin.command:
+        cmd: semodule -l
+      register: semodule_list
+      changed_when: false
 
-- name: Cleanup
+    - name: Register license service with selinux
+      when: '"sesinetd" in semodule_list'
+      ansible.builtin.include_tasks:
+        file: license_service_selinux.yml
+
+- name: Cleanup remote
   become: true
   ansible.builtin.file:
     path:
-      - "{{ download_script_venv_path }}"
       - "{{ license_selinux_module_tmp_dir }}"
       - "{{ houdini_package_dir }}"
     state: absent
+
+- name: Cleanup controller venv
+  ansible.builtin.file:
+    path: "{{ houdini_download_script_venv_path }}"
+    state: absent
+  delegate_to: localhost
 
 ...

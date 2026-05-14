@@ -1,0 +1,79 @@
+---
+
+- name: Check for existing houdini launcher
+  ansible.builtin.stat:
+    path: "{{ houdini_launcher_dir }}/bin/houdini_launcher"
+  register: launcher_installation_path
+
+- name: Prepare api query
+  when: not launcher_installation_path.stat.exists and not houdini_launcher_url
+  block:
+    - name: Create venv for houdini install script
+      ansible.builtin.pip:
+        name:
+          - pip
+          - click
+          - requests
+        state: present
+        virtualenv: "{{ houdini_download_script_venv_path }}"
+        virtualenv_command: "python3 -m venv"
+      delegate_to: localhost
+
+    - name: "Query launcher url {{ houdini_version ~ '.' ~ houdini_build_number }}"
+      ansible.builtin.command:
+        cmd: >
+          {{ houdini_download_script_venv_path }}/bin/python api_download.py get-build-url
+          {{ sidefx_client_id }}
+          {{ sidefx_client_secret_key }}
+          "houdini-launcher"
+          {{ houdini_version }}
+          "linux"
+          {{ houdini_production_only }}
+        chdir: "{{ role_path }}/files"
+      changed_when: false
+      register: launcher_query_result
+      delegate_to: localhost
+
+    - name: Parse download response
+      ansible.builtin.set_fact:
+        launcher_query_filename: "{{ (launcher_query_result.stdout | from_json).filename }}"
+        launcher_query_url: "{{ (launcher_query_result.stdout | from_json).download_url }}"
+        launcher_query_hash: "{{ (launcher_query_result.stdout | from_json).hash }}"
+
+- name: Set file installer vars
+  ansible.builtin.set_fact:
+    launcher_download_url: "{{ houdini_launcher_url | default(launcher_query_url | default(''), true) }}"
+    launcher_filename: "{{ launcher_installer_file | default(launcher_query_filename | default(''), true) }}"
+
+- name: Ensure temporary install directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_package_dir }}"
+    state: "directory"
+    mode: "0755"
+    owner: "root"
+    group: "root"
+
+- name: Get launcher artifact
+  become: true
+  when: not launcher_installation_path.stat.exists
+  ansible.builtin.get_url:
+    url: "{{ launcher_download_url }}"
+    dest: "{{ houdini_package_dir }}/{{ launcher_filename }}"
+    owner: root
+    group: root
+    mode: "0755"
+    checksum: >-
+      {{ 'md5:' ~ launcher_query_hash if launcher_query_hash is defined else omit }}
+
+- name: Get iso artifact
+  become: true
+  when: false in products_query.values() and houdini_iso_url != ""
+  ansible.builtin.get_url:
+    url: "{{ houdini_iso_url }}"
+    dest: "{{ houdini_package_dir }}/{{ houdini_iso_url | basename }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+...

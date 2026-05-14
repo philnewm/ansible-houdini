@@ -3,18 +3,23 @@
 galaxy_info:
   role_name: houdini
   author: philnewm
-  description: ansible-role-template description
+  description: Install houdini and set up apprentice licensing
   license: MIT
   min_ansible_version: "2.1"
   platforms:
     - name: EL
       versions:
         - "9"
+    - name: Fedora
+      versions:
+        - "43"
     - name: Debian
       versions:
-        - "bookworm"
+        - "trixie"
     - name: "Ubuntu"
       versions:
-        - "jammy"
-  galaxy_tags: []
+        - "noble"
+  galaxy_tags:
+    - houdini
+    - sidefx
 dependencies: []

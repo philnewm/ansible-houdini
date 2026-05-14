@@ -1,0 +1,52 @@
+---
+
+- name: "Online install for {{ houdini_product.product.key }}"
+  when: houdini_iso_url == ""
+  block:
+    - name: Write settings file
+      become: true
+      ansible.builtin.copy:
+        dest: "{{ houdini_package_dir }}/houdini_settings"
+        content: |
+          client_id={{ sidefx_client_id }}
+          client_secret={{ sidefx_client_secret_key }}
+          accept_eula=SideFX-{{ eula_date }}
+        owner: root
+        group: root
+        mode: "0644"
+      no_log: true
+
+    - name: "Online install for {{ houdini_product.product.key }}"
+      become: true
+      # eula ref: https://www.sidefx.com/download/eula/
+      when: houdini_iso_url == ""
+      ansible.builtin.command:
+        cmd: >-
+          ./houdini_installer install
+          --product '{{ houdini_product.product.key }}'
+          --accept-EULA 'SideFX-{{ eula_date }}'
+          --version {{ houdini_version }}.{{ houdini_build_number }}
+          --settings-file {{ houdini_package_dir }}/houdini_settings
+          --installdir {{ houdini_product.product.value.install_path }}
+          {{ houdini_product.product.value.install_flags | default(omit) }}
+          --shfs-directory {{ houdini_shfs_dir }}
+        chdir: "{{ houdini_launcher_dir }}/bin"
+        creates: "{{ houdini_install_dir }}/houdini.uninstall"
+
+- name: "Offline install for {{ houdini_product.product.key }}"
+  become: true
+  # eula ref: https://www.sidefx.com/download/eula/
+  when: houdini_iso_url != ""
+  ansible.builtin.command:
+    cmd: >-
+      ./houdini_installer install
+      --accept-EULA SideFX-{{ eula_date }}
+      --product '{{ houdini_product.product.key }}'
+      --offline-installer {{ houdini_package_dir }}/{{ houdini_iso_url | basename }}
+      --installdir {{ houdini_product.product.value.install_path }}
+      {{ houdini_product.product.value.install_flags | default(omit) }}
+      --shfs-directory {{ houdini_shfs_dir }}
+    chdir: "{{ houdini_launcher_dir }}/bin"
+    creates: "{{ houdini_product.product.value }}"
+
+...

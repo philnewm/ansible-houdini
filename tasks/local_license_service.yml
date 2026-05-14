@@ -1,47 +1,51 @@
 ---
 
-- name: Get initd service file
+- name: Check for existing houdini license service
   ansible.builtin.stat:
-    path: "/etc/init.d/sesinetd"
-  register: initd_service_result
+    path: "{{ houdini_license_server_dir }}/sesinetd"
+  register: sesinetd_file
 
-- name: Stop sesinetd service
-  become: true
-  when: initd_service_result.stat.exists
-  ansible.builtin.service:
-    name: sesinetd
-    state: stopped
+- name: "Online install for License Server"
+  when: houdini_iso_url == "" and not sesinetd_file.stat.exists
+  block:
+    - name: Write settings file
+      become: true
+      ansible.builtin.copy:
+        dest: "{{ houdini_package_dir }}/houdini_settings"
+        content: |
+          client_id={{ sidefx_client_id }}
+          client_secret={{ sidefx_client_secret_key }}
+          accept_eula=SideFX-{{ eula_date }}
+        owner: root
+        group: root
+        mode: "0644"
+      no_log: true
 
-- name: List processes matching sesinetd
+    - name: "Online install for License Server"
+      become: true
+      # eula ref: https://www.sidefx.com/download/eula/
+      ansible.builtin.command:
+        cmd: >-
+          ./houdini_installer install
+          --product "License Server"
+          --accept-EULA 'SideFX-{{ eula_date }}'
+          --version {{ houdini_version }}.{{ houdini_build_number }}
+          --settings-file {{ houdini_package_dir }}/houdini_settings
+        chdir: "{{ houdini_launcher_dir }}/bin"
+        creates: "{{ houdini_install_dir }}/licenses.disabled"
+
+- name: Install license service (offline)
   become: true
+  # eula ref: https://www.sidefx.com/download/eula/
+  when: houdini_iso_url != "" and not sesinetd_file.stat.exists
   ansible.builtin.command:
-    cmd: pgrep -a sesinetd
-  register: sesinetd_found
-  failed_when: sesinetd_found.rc not in [0, 1]
-  changed_when: false
-
-- name: Kill sesinetd processes if running
-  become: true
-  when: sesinetd_found.stdout_lines | length > 0 and initd_service_result.stat.exists
-  ansible.builtin.command:
-    cmd: pkill -f sesinetd
-  register: pkill_result
-  failed_when: pkill_result.rc not in [0, 1]
-  changed_when: pkill_result.rc == 0
-
-- name: Remove initd service file
-  become: true
-  ansible.builtin.file:
-    path: "/etc/init.d/sesinetd"
-    state: "absent"
-
-- name: Copy systemd sesinetd module
-  become: true
-  ansible.builtin.copy:
-    src: "/usr/lib/sesi/sesinetd.service"
-    dest: "/etc/systemd/system/sesinetd.service"
-    remote_src: true
-    mode: "0644"
+    cmd: >-
+      ./houdini_installer install
+      --product "License Server"
+      --accept-EULA SideFX-{{ eula_date }}
+      --offline-installer {{ houdini_package_dir }}/{{ houdini_iso_url | basename }}
+    chdir: "{{ houdini_launcher_dir }}/bin"
+    creates: "{{ houdini_license_server_dir }}/licenses.disabled"
 
 - name: Start sesinetd service
   become: true
@@ -59,5 +63,14 @@
   ansible.builtin.assert:
     that:
       - ansible_facts.services['sesinetd.service'].state == "running"
+    quiet: true
+
+- name: Disable hserver in container
+  become: true
+  when: ansible_facts.virtualization_type in ["docker", "podman", "lxc", "containerd", "container"]
+  ansible.builtin.systemd:
+    name: hserver
+    state: stopped
+    enabled: false
 
 ...

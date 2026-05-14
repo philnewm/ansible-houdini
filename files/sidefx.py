@@ -13,46 +13,16 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
 
-def service(
-        client_id, client_secret_key,
-        access_token_url="https://www.sidefx.com/oauth2/application_token",
-        endpoint_url="https://www.sidefx.com/api/",
-        access_token=None, access_token_expiry_time=None, timeout=None):
-    if (access_token is None or
-            access_token_expiry_time is None or
-            access_token_expiry_time < time.time()):
-        access_token, access_token_expiry_time = (
-            get_access_token_and_expiry_time(
-                access_token_url, client_id, client_secret_key,
-                timeout=timeout))
-
-    return _Service(
-        endpoint_url, access_token, access_token_expiry_time, timeout=timeout)
-
-
-class _Service(object):
-    def __init__(
-            self, endpoint_url, access_token, access_token_expiry_time,
-            timeout):
-        self.endpoint_url = endpoint_url
-        self.access_token = access_token
-        self.access_token_expiry_time = access_token_expiry_time
-        self.timeout = timeout
-
-    def __getattr__(self, attr_name):
-        return _APIFunction(attr_name, self)
-
-
 class _APIFunction(object):
-    def __init__(self, function_name, service):
-        self.function_name = function_name
-        self.service = service
+    def __init__(self, function_name: str, service) -> None:
+        self.function_name: str = function_name
+        self.service: str = service
 
-    def __getattr__(self, attr_name):
+    def __getattr__(self, attr_name: str) -> "_APIFunction":
         # This isn't actually an API function, but a family of them.  Append
         # the requested function name to our name.
         return _APIFunction(
-            "%s.%s" % (self.function_name, attr_name), self.service)
+            f"{self.function_name}.{attr_name}", self.service)
 
     def __call__(self, *args, **kwargs):
         return call_api_with_access_token(
@@ -61,13 +31,30 @@ class _APIFunction(object):
             timeout=self.service.timeout)
 
 
+class _Service(object):
+    def __init__(
+            self,
+            endpoint_url: str,
+            access_token: str,
+            access_token_expiry_time: str,
+            timeout: str) -> None:
+        self.endpoint_url: str = endpoint_url
+        self.access_token: str = access_token
+        self.access_token_expiry_time: str = access_token_expiry_time
+        self.timeout: str = timeout
+
+    def __getattr__(self, attr_name: str) -> _APIFunction:
+        return _APIFunction(attr_name, self)
+
+
 class File(object):
     """Pass parameters of this type to API functions as a way of uploading
     large files.  Note that these File parameters must be specified by keyword
     arguments when calling the functions.
     """
-    def __init__(self, filename):
-        self.filename = filename
+
+    def __init__(self, filename: str) -> None:
+        self.filename: str = filename
 
 
 class ResponseFile(object):
@@ -83,6 +70,25 @@ class ResponseFile(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.response.close()
+
+
+def service(
+        client_id: str, client_secret_key: str,
+        access_token_url: str = "https://www.sidefx.com/oauth2/application_token",
+        endpoint_url: str ="https://www.sidefx.com/api/",
+        access_token: str | None = None,
+        access_token_expiry_time: float | None = None,
+        timeout: str | None = None) -> _Service:
+    if (access_token is None or
+            access_token_expiry_time is None or
+            access_token_expiry_time < time.time()):
+        access_token, access_token_expiry_time = (
+            get_access_token_and_expiry_time(
+                access_token_url, client_id, client_secret_key,
+                timeout=timeout))
+
+    return _Service(
+        endpoint_url, access_token, access_token_expiry_time, timeout=timeout)
 
 
 #------------------------------------------------------------------------------
