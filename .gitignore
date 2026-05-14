@@ -2,3 +2,5 @@
 .git
 molecule/default/boot_analysis/
 .ansible
+*.pyc
+.venv
