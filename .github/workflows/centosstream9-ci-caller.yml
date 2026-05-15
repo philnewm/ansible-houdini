@@ -1,6 +1,6 @@
 ---
 
-name: Alma9-CI
+name: CentOSStream9
 
 on:
   push:
@@ -22,10 +22,10 @@ permissions:
   contents: read
 
 jobs:
-  alma9-ci:
-    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
+  ci:
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-podman.yml@main
     with:
-      scenario_name: alma9
+      scenario_name: centosstream9
     secrets:
       env_secrets: |
         SIDEFX_CLIENT_ID=${{ secrets.SIDEFX_CLIENT_ID }}

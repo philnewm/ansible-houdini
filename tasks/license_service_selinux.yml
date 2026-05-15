@@ -1,8 +1,5 @@
 ---
 
-# https://www.sidefx.com/faq/question/how-do-i-add-the-license-server-sesinetd-to-selinux/
-# WARNING while this setup seems to work for sesinetd it doesn't work for hserver - which is required for hython
-
 - name: Install selinux mod dependencies
   become: true
   loop: "{{ selinux_packages }}"
@@ -10,75 +7,51 @@
     name: "{{ item }}"
     state: present
 
-- name: Get selinux module
+- name: Create temp directory
   become: true
-  when: ansible_os_family == "RedHat"
-  ansible.builtin.shell:
-    cmd: |
-      set -o pipefail
-      semodule -l | grep sesinetd
-    executable: /bin/bash
-  changed_when: false
-  failed_when: false
-  register: selinux_module_result
+  ansible.builtin.file:
+    path: /tmp/sesinetd_policy
+    state: directory
+    mode: "0755"
 
-- name: Test selinux module
-  when: selinux_module_result.stdout != "sesinetd"
-  block:
-    - name: Create temp directory
-      become: true
-      ansible.builtin.file:
-        path: /tmp/sesinetd-selinux
-        state: directory
-        mode: "0755"
+- name: Copy policy sources
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/tmp/sesinetd_policy/{{ item }}"
+    mode: '0644'
+  loop:
+    - sesinetd.te
+    - sesinetd.fc
+    - sesinetd.if
 
-    - name: Get and extract .zip file
-      become: true
-      ansible.builtin.unarchive:
-        src: "https://media.sidefx.com/uploads/support/faq/selinux.zip"
-        dest: "{{ license_selinux_module_tmp_dir }}"
-        creates: "{{ license_selinux_module_tmp_dir }}/selinux/sesinetd_selinux.sh"
-        mode: "0755"
-        remote_src: true
+- name: Build SELinux policy with make
+  become: true
+  community.general.make:
+    chdir: "/tmp/sesinetd_policy"
+    file: /usr/share/selinux/devel/Makefile
+    target: all
+  register: make_result
+  changed_when: make_result.rc == 0
 
-    - name: Build SELinux policy with make
-      become: true
-      community.general.make:
-        chdir: "{{ license_selinux_module_tmp_dir }}/selinux"
-        file: /usr/share/selinux/devel/Makefile
-        target: all
+- name: Install policy module
+  become: true
+  ansible.builtin.command:
+    cmd: semodule -i /tmp/sesinetd_policy/sesinetd.pp
+  register: semodule_result
+  changed_when: semodule_result.rc == 0
 
-    - name: Check if sesinetd SELinux module is installed
-      become: true
-      ansible.builtin.command:
-        cmd: semodule -l
-      register: semodule_list
-      changed_when: false
+- name: Assign TCP port 1715 to sesinetd_port_t
+  become: true
+  community.general.seport:
+    ports: 1715
+    proto: tcp
+    setype: sesinetd_port_t
+    state: present
 
-    - name: Install SELinux policy module
-      become: true
-      when: "'sesinetd' not in semodule_list.stdout_lines"
-      ansible.builtin.command:
-        cmd: semodule -i {{ license_selinux_module_tmp_dir }}/selinux/sesinetd.pp
-      register: install_result
-      changed_when: install_result.rc == 0
-
-    - name: Assign TCP port 1715 to sesinetd_port_t
-      become: true
-      community.general.seport:
-        ports: 1715
-        proto: tcp
-        setype: sesinetd_port_t
-        state: present
-
-    - name: Restore SELinux context
-      become: true
-      loop:
-        - "/usr/lib/sesi/"
-        - "/var/log/sidefx/"
-      ansible.builtin.command:
-        cmd: restorecon -R "{{ item }}"
-      register: restorecon_sesi
-      changed_when: restorecon_sesi.rc == 0
+- name: Apply file contexts
+  ansible.builtin.command:
+    cmd: restorecon -Rv /usr/lib/sesi/
+  register: restorecon_result
+  changed_when: "'Relabeled' in restorecon_result.stdout"
 
 ...

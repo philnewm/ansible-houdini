@@ -1,0 +1,48 @@
+policy_module(sesinetd, 1.0.0)
+
+########################################
+# Declarations
+#
+
+# The domain sesinetd runs in
+type sesinetd_t;
+type sesinetd_exec_t;
+init_daemon_domain(sesinetd_t, sesinetd_exec_t)
+
+# Runtime data (cache db, peak usage bin)
+type sesinetd_var_lib_t;
+files_type(sesinetd_var_lib_t)
+
+# Config/read-only data (ini, ssl certs, licenses)
+type sesinetd_etc_t;
+files_type(sesinetd_etc_t)
+
+########################################
+# sesinetd_t policy
+#
+
+# Basic permissions every daemon needs
+allow sesinetd_t self:process { fork signal_perms };
+allow sesinetd_t self:fifo_file rw_fifo_file_perms;
+allow sesinetd_t self:unix_stream_socket create_stream_socket_perms;
+allow sesinetd_t self:tcp_socket create_stream_socket_perms;
+allow sesinetd_t self:udp_socket create_socket_perms;
+
+# Read and write its own var_lib files (cache db, peak usage)
+manage_files_pattern(sesinetd_t, sesinetd_var_lib_t, sesinetd_var_lib_t)
+manage_dirs_pattern(sesinetd_t, sesinetd_var_lib_t, sesinetd_var_lib_t)
+
+# Read config and SSL certs
+read_files_pattern(sesinetd_t, sesinetd_etc_t, sesinetd_etc_t)
+list_dirs_pattern(sesinetd_t, sesinetd_etc_t, sesinetd_etc_t)
+
+# Network: listen on its license port (default 1715)
+corenet_tcp_bind_generic_node(sesinetd_t)
+corenet_tcp_bind_all_unreserved_ports(sesinetd_t)
+
+# Logging
+logging_send_syslog_msg(sesinetd_t)
+
+# Allow reading system state (fairly standard for daemons)
+kernel_read_system_state(sesinetd_t)
+miscfiles_read_localization(sesinetd_t)

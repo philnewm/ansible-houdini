@@ -1,0 +1,17 @@
+## <summary>Houdini sesinetd license manager</summary>
+
+########################################
+## <summary>
+##      Connect to sesinetd over TCP.
+## </summary>
+## <param name="domain">
+##      <summary>Domain allowed access.</summary>
+## </param>
+#
+interface(`sesinetd_tcp_connect',`
+        gen_require(`
+                type sesinetd_t;
+        ')
+        corenet_tcp_recvfrom_labeled($1, sesinetd_t)
+        allow $1 sesinetd_t:tcp_socket { connectto };
+')

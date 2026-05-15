@@ -1,0 +1,34 @@
+---
+
+name: Debian13
+
+on:
+  push:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - '**/*.md'
+      - .gitignore
+      - ./meta/main.yml
+
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'README.md'
+      - '**/*.md'
+      - .gitignore
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-podman.yml@main
+    with:
+      scenario_name: debian13
+    secrets:
+      env_secrets: |
+        SIDEFX_CLIENT_ID=${{ secrets.SIDEFX_CLIENT_ID }}
+        SIDEFX_CLIENT_SECRET_KEY=${{ secrets.SIDEFX_CLIENT_SECRET }}
+
+...

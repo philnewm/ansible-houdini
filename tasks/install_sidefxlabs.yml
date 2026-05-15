@@ -1,0 +1,45 @@
+---
+
+- name: Ensure sidefx packages (online)
+  when: houdini_iso_url == ""
+  block:
+    - name: Write settings file
+      become: true
+      ansible.builtin.copy:
+        dest: "{{ houdini_package_dir }}/houdini_settings"
+        content: |
+          client_id={{ sidefx_client_id }}
+          client_secret={{ sidefx_client_secret_key }}
+          accept_eula=SideFX-{{ eula_date }}
+        owner: root
+        group: root
+        mode: "0644"
+      no_log: true
+
+    - name: Install sidefx labs (online)
+      become: true
+      # eula ref: https://www.sidefx.com/download/eula/
+      when: houdini_iso_url == ""
+      ansible.builtin.command:
+        cmd: >-
+          ./houdini_installer install-package
+          --package-name {{ houdini_sidefxlabs_name }}
+          --settings-file {{ houdini_package_dir }}/houdini_settings
+          --installdir {{ houdini_sidefxlabs_package_dir }}
+        chdir: "{{ houdini_launcher_dir }}/bin"
+        creates: "{{ houdini_install_dir }}/houdini.uninstall"
+
+- name: Install sidefxlabs (offline)
+  become: true
+  # eula ref: https://www.sidefx.com/download/eula/
+  when: houdini_iso_url != ""
+  ansible.builtin.command:
+    cmd: >-
+      ./houdini_installer install-package
+      --package-name '{{ houdini_sidefxlabs_name }}'
+      --offline-installer {{ houdini_package_dir }}/{{ houdini_iso_url | basename }}
+      --installdir {{ houdini_install_dir }}
+    chdir: "{{ houdini_launcher_dir }}/bin"
+    creates: "{{ houdini_install_dir }}/houdini.uninstall"
+
+...

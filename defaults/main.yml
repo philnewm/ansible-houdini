@@ -5,36 +5,43 @@ state: present
 sidefx_client_id: "{{ lookup('ansible.builtin.env', 'SIDEFX_CLIENT_ID', default=undef()) }}"
 sidefx_client_secret_key: "{{ lookup('ansible.builtin.env', 'SIDEFX_CLIENT_SECRET_KEY', default=undef()) }}"
 houdini_version: "21.0"
-houdini_build_number: "440"
+houdini_build_number: "700"
 houdini_production_only: true
-houdini_package_dir: "/tmp/houdini_{{ houdini_version }}.{{ houdini_build_number }}_package"
+houdini_iso_url: ""
+houdini_launcher_url: ""
+launcher_installer_file: install_houdini_launcher.sh
+houdini_package_dir: "/tmp/houdini_package"
 houdini_install_dir: "/opt/hfs{{ houdini_version }}.{{ houdini_build_number }}"
+houdini_launcher_dir: "/opt/sidefx/launcher"
+houdini_shfs_dir: "/opt/sidefx/sidefx_packages"
+houdini_license_server_dir: "/usr/lib/sesi"
 
-download_method: "remote"
-download_script_venv_path: "/tmp/python_venv/temp_ansible_venv"
+houdini_download_script_venv_path: "/tmp/houdini_download_venv"
 
-houdini_features:
-  - engine-maya
-  - engine-unity
-  - engine-unreal
-  - menus
-  - license
-  - avahi
-  - sidefxlabs
-  - hqueue-server
-  - hqueue-client
-
-hqueue_server_dir: "/opt/hqueue"
-hqueue_client_user: "hquser"
-hqueue_client_dir: "/home/hquser/hqclient"
-
-houdini_flags: "{{ houdini_features | map('regex_replace', '^(.*)$', '--install-\\1') | join(' ') }}"
+# TODO ansible needs a list as input - dict is too complex
+houdini_products:
+  Houdini:
+    install_path: "{{ houdini_install_dir }}"
+  Engine Maya:
+    install_path: "/opt/sidefx/houdini_engine/Maya/{{ houdini_version }}.{{ houdini_build_number }}"
+    install_flags: "--for-houdini {{ houdini_version }}.{{ houdini_build_number }}"
+  Engine Unreal:
+    install_path: "/opt/sidefx/houdini_engine/Unreal/{{ houdini_version }}.{{ houdini_build_number }}"
+  Engine Unity:
+    install_path: "/opt/sidefx/houdini_engine/Unity/{{ houdini_version }}.{{ houdini_build_number }}"
+  HQueue Server:
+    install_path: "/opt/hqueue"
+  HQueue Client:
+    install_path: "/home/hquser/hqclient"
 
 eula_date: "2021-10-13"
-install_name: houdini-{{ version }}-linux_x86_64_gcc11.2
 
 license_selinux_module_tmp_dir: "/tmp/sesinetd-selinux"
-houdini_apprentice_license: true
+houdini_license_service: true
+houdini_apprentice_license: false
+houdini_sidefx_labs: true
+houdini_sidefxlabs_name: "SideFX Labs {{ houdini_version }} Production Build"
+houdini_sidefx_labs_path: "/opt/sidefx/sidefx_packages"
 
 venv_package:
   Debian: "python3-venv"

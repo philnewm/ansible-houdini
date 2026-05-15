@@ -1,6 +1,6 @@
 ---
 
-name: Debian12-CI
+name: Ubuntu2404
 
 on:
   push:
@@ -22,10 +22,10 @@ permissions:
   contents: read
 
 jobs:
-  debian12-ci:
-    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-vbox.yml@main
+  ci:
+    uses: philnewm/ansible-role-repo-control/.github/workflows/molecule-ci-podman.yml@main
     with:
-      scenario_name: debian12
+      scenario_name: ubuntu2404
     secrets:
       env_secrets: |
         SIDEFX_CLIENT_ID=${{ secrets.SIDEFX_CLIENT_ID }}
