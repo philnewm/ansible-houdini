@@ -2,7 +2,8 @@ import click
 import json
 import os
 import sidefx
-
+from typing import Optional
+# requires python3.9 compatibility due to rhel9 systems
 
 @click.group()
 def cli() -> None:
@@ -25,7 +26,7 @@ def get_build_url(
     platform: str = "linux",
     production_only: bool = True,
     build_number: str = "",
-    ) -> dict[str, str] | None:
+    ) -> Optional[dict[str, str]]:
 
     service = sidefx.service(
         client_id=client_id,
