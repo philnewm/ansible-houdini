@@ -79,6 +79,21 @@
     state: present
     update_cache: true
 
+- name: Ensure selinux policy
+  when: houdini_license_service and ansible_facts.selinux.status == "enabled"
+  block:
+    - name: Check installed module version
+      become: true
+      ansible.builtin.command:
+        cmd: semodule -l
+      register: semodule_list
+      changed_when: false
+
+    - name: Include selinux policy
+      when: "'sesinetd' not in semodule_list.stdout_lines"
+      ansible.builtin.include_tasks:
+        file: license_service_selinux.yml
+
 - name: Include local license service
   when: houdini_license_service
   ansible.builtin.include_tasks:
@@ -88,21 +103,6 @@
   when: houdini_apprentice_license
   ansible.builtin.include_tasks:
     file: apprentice_license.yml
-
-- name: Ensure selinux policy
-  when: ansible_facts.selinux.status == "enabled"
-  block:
-    - name: Check installed module version
-      become: true
-      ansible.builtin.command:
-        cmd: semodule -l
-      register: semodule_list
-      changed_when: false
-
-    - name: Register license service with selinux
-      when: '"sesinetd" in semodule_list'
-      ansible.builtin.include_tasks:
-        file: license_service_selinux.yml
 
 - name: Cleanup remote
   become: true

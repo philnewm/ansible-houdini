@@ -30,8 +30,6 @@
     chdir: "/tmp/sesinetd_policy"
     file: /usr/share/selinux/devel/Makefile
     target: all
-  register: make_result
-  changed_when: make_result.rc == 0
 
 - name: Install policy module
   become: true
@@ -46,6 +44,14 @@
     ports: 1715
     proto: tcp
     setype: sesinetd_port_t
+    state: present
+
+- name: Assign TCP port 1714 to hserver_port_t
+  become: true
+  community.general.seport:
+    ports: 1714
+    proto: tcp
+    setype: hserver_port_t
     state: present
 
 - name: Apply file contexts
