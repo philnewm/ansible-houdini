@@ -9,3 +9,5 @@
 /usr/lib/sesi/licenses.*                gen_context(system_u:object_r:sesinetd_var_lib_t,s0)
 /usr/lib/sesi/sesinetd\.ini             gen_context(system_u:object_r:sesinetd_etc_t,s0)
 /usr/lib/sesi/ssl(/.*)?                 gen_context(system_u:object_r:sesinetd_etc_t,s0)
+/usr/lib/sesi/hserver/hserver           gen_context(system_u:object_r:hserver_exec_t,s0)
+/var/lib/hserver(/.*)?                  gen_context(system_u:object_r:hserver_var_lib_t,s0)

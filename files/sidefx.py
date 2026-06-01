@@ -1,5 +1,6 @@
 # Implemented by SideFX
 # source: https://www.sidefx.com/docs/api/_downloads/2bed669482c8cadf176add6254a2ee7c/sidefx.py
+# requires python3.9 compatibility due to rhel9 systems
 
 from __future__ import print_function, absolute_import
 import time
@@ -7,6 +8,7 @@ import json
 import base64
 import io
 import html
+from typing import Optional
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -76,9 +78,10 @@ def service(
         client_id: str, client_secret_key: str,
         access_token_url: str = "https://www.sidefx.com/oauth2/application_token",
         endpoint_url: str ="https://www.sidefx.com/api/",
-        access_token: str | None = None,
-        access_token_expiry_time: float | None = None,
-        timeout: str | None = None) -> _Service:
+        access_token: Optional[str] = None,
+        access_token_expiry_time: Optional[float] = None,
+        timeout: Optional[str] = None) -> _Service:
+
     if (access_token is None or
             access_token_expiry_time is None or
             access_token_expiry_time < time.time()):
