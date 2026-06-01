@@ -4,45 +4,113 @@ policy_module(sesinetd, 1.0.0)
 # Declarations
 #
 
-# The domain sesinetd runs in
 type sesinetd_t;
 type sesinetd_exec_t;
 init_daemon_domain(sesinetd_t, sesinetd_exec_t)
 
-# Runtime data (cache db, peak usage bin)
 type sesinetd_var_lib_t;
 files_type(sesinetd_var_lib_t)
 
-# Config/read-only data (ini, ssl certs, licenses)
 type sesinetd_etc_t;
 files_type(sesinetd_etc_t)
+
+type sesinetd_tmp_t;
+files_tmp_file(sesinetd_tmp_t)
+
+type sesinetd_port_t;
+corenet_port(sesinetd_port_t)
+
+type hserver_t;
+type hserver_exec_t;
+init_daemon_domain(hserver_t, hserver_exec_t)
+
+type hserver_var_lib_t;
+files_type(hserver_var_lib_t)
+
+type hserver_tmp_t;
+files_tmp_file(hserver_tmp_t)
+
+type hserver_port_t;
+corenet_port(hserver_port_t)
 
 ########################################
 # sesinetd_t policy
 #
 
-# Basic permissions every daemon needs
 allow sesinetd_t self:process { fork signal_perms };
+allow sesinetd_t self:capability { chown setgid setuid dac_override };
 allow sesinetd_t self:fifo_file rw_fifo_file_perms;
 allow sesinetd_t self:unix_stream_socket create_stream_socket_perms;
 allow sesinetd_t self:tcp_socket create_stream_socket_perms;
 allow sesinetd_t self:udp_socket create_socket_perms;
 
-# Read and write its own var_lib files (cache db, peak usage)
 manage_files_pattern(sesinetd_t, sesinetd_var_lib_t, sesinetd_var_lib_t)
 manage_dirs_pattern(sesinetd_t, sesinetd_var_lib_t, sesinetd_var_lib_t)
+allow sesinetd_t sesinetd_var_lib_t:file map;
 
-# Read config and SSL certs
+files_tmp_filetrans(sesinetd_t, sesinetd_tmp_t, { file dir })
+manage_files_pattern(sesinetd_t, sesinetd_tmp_t, sesinetd_tmp_t)
+manage_dirs_pattern(sesinetd_t, sesinetd_tmp_t, sesinetd_tmp_t)
+
 read_files_pattern(sesinetd_t, sesinetd_etc_t, sesinetd_etc_t)
 list_dirs_pattern(sesinetd_t, sesinetd_etc_t, sesinetd_etc_t)
 
-# Network: listen on its license port (default 1715)
 corenet_tcp_bind_generic_node(sesinetd_t)
-corenet_tcp_bind_all_unreserved_ports(sesinetd_t)
+allow sesinetd_t sesinetd_port_t:tcp_socket name_bind;
 
-# Logging
+allow sesinetd_t tmp_t:dir { setattr };
+allow sesinetd_t hserver_tmp_t:dir { search getattr setattr write add_name };
+allow sesinetd_t hserver_tmp_t:file { getattr setattr };
+
+filetrans_pattern(sesinetd_t, hserver_tmp_t, sesinetd_tmp_t, file)
+allow sesinetd_t hserver_tmp_t:dir { search getattr setattr write add_name };
+
 logging_send_syslog_msg(sesinetd_t)
-
-# Allow reading system state (fairly standard for daemons)
 kernel_read_system_state(sesinetd_t)
+kernel_read_vm_sysctls(sesinetd_t)
 miscfiles_read_localization(sesinetd_t)
+auth_read_passwd(sesinetd_t)
+dev_read_sysfs(sesinetd_t)
+corecmd_exec_shell(sesinetd_t)
+corecmd_exec_bin(sesinetd_t)
+allow sesinetd_t shell_exec_t:file { execute execute_no_trans };
+systemd_userdbd_stream_connect(sesinetd_t)
+
+########################################
+# hserver_t policy
+#
+
+allow hserver_t self:process { fork signal_perms };
+allow hserver_t self:fifo_file rw_fifo_file_perms;
+allow hserver_t self:unix_stream_socket create_stream_socket_perms;
+allow hserver_t self:unix_dgram_socket { create connect write };
+allow hserver_t self:udp_socket { create_socket_perms setopt };
+allow hserver_t self:tcp_socket create_stream_socket_perms;
+allow hserver_t self:netlink_route_socket { create bind read write nlmsg_read };
+
+manage_files_pattern(hserver_t, hserver_var_lib_t, hserver_var_lib_t)
+manage_dirs_pattern(hserver_t, hserver_var_lib_t, hserver_var_lib_t)
+allow hserver_t hserver_var_lib_t:file map;
+
+files_tmp_filetrans(hserver_t, hserver_tmp_t, { file dir })
+manage_files_pattern(hserver_t, hserver_tmp_t, hserver_tmp_t)
+manage_dirs_pattern(hserver_t, hserver_tmp_t, hserver_tmp_t)
+
+allow hserver_t sesinetd_var_lib_t:dir { search getattr };
+allow hserver_t sesinetd_port_t:tcp_socket name_connect;
+
+corenet_tcp_bind_generic_node(hserver_t)
+allow hserver_t hserver_port_t:tcp_socket name_bind;
+corenet_tcp_connect_http_port(hserver_t)
+
+logging_send_syslog_msg(hserver_t)
+kernel_read_system_state(hserver_t)
+miscfiles_read_localization(hserver_t)
+auth_read_passwd(hserver_t)
+sysnet_read_config(hserver_t)
+corecmd_exec_shell(hserver_t)
+corecmd_exec_bin(hserver_t)
+allow hserver_t shell_exec_t:file { execute execute_no_trans };
+
+# hserver checks for systemctl
+systemd_exec_systemctl(hserver_t)
