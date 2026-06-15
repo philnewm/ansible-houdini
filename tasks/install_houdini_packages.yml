@@ -1,5 +1,9 @@
 ---
 
+- name: Set package
+  ansible.builtin.set_fact:
+    houdini_package: "{{ houdini_package_path.houdini_package }}"
+
 - name: Ensure sidefx packages (online)
   when: houdini_iso_url == ""
   block:
@@ -23,11 +27,11 @@
       ansible.builtin.command:
         cmd: >-
           ./houdini_installer install-package
-          --package-name {{ houdini_sidefxlabs_name }}
+          --package-name '{{ houdini_package.name }} {{ houdini_package.version }} {{ houdini_package.build }}'
           --settings-file {{ houdini_package_dir }}/houdini_settings
-          --installdir {{ houdini_sidefxlabs_package_dir }}
+          --installdir {{ houdini_sidefx_packages_path }}
         chdir: "{{ houdini_launcher_dir }}/bin"
-        creates: "{{ houdini_install_dir }}/houdini.uninstall"
+        creates: '{{ houdini_sidefx_packages_path }}/{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}/LICENSE.md'
 
 - name: Install sidefxlabs (offline)
   become: true
@@ -36,10 +40,10 @@
   ansible.builtin.command:
     cmd: >-
       ./houdini_installer install-package
-      --package-name '{{ houdini_sidefxlabs_name }}'
+      --package-name '{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}.{{ houdini_package.build_number }}'
       --offline-installer {{ houdini_package_dir }}/{{ houdini_iso_url | basename }}
-      --installdir {{ houdini_install_dir }}
+      --installdir {{ houdini_sidefx_packages_path }}
     chdir: "{{ houdini_launcher_dir }}/bin"
-    creates: "{{ houdini_install_dir }}/houdini.uninstall"
+    creates: '{{ houdini_sidefx_packages_path }}/{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}/LICENSE.md'
 
 ...
