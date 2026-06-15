@@ -121,6 +121,11 @@
   ansible.builtin.include_tasks:
     file: apprentice_license.yml
 
+- name: Configure houdini
+  when: houdini_include_user_config
+  ansible.builtin.include_tasks:
+    file: user_config.yml
+
 - name: Cleanup remote
   become: true
   ansible.builtin.file:

@@ -54,6 +54,19 @@ houdini_sidefx_labs: true
 houdini_sidefxlabs_name: "SideFX Labs {{ houdini_version }} Production Build"
 houdini_sidefx_packages_path: "/opt/sidefx/sidefx_packages"
 
+houdini_include_user_config: true
+houdini_user_config: "/etc/skel/houdini{{ houdini_version }}"
+houdini_env:
+  HOUDINI_NO_SPLASH: 0
+  HOUDINI_SPLASH_MESSAGE: "configured by ansible"
+houdini_vp_background_settings:
+  BackgroundColor:
+    rgb: "0.20 0.01 0.25"
+    comment: "background color - adjusted"
+  BackgroundBottomColor:
+    rgb: "0.04 0.18 0.23"
+    comment: "background color at bottom of view - adjusted"
+
 venv_package:
   Debian: "python3-venv"
   Ubuntu: "python3.10-venv"
