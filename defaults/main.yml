@@ -50,14 +50,12 @@ houdini_packages:
 license_selinux_module_tmp_dir: "/tmp/sesinetd-selinux"
 houdini_license_service: true
 houdini_apprentice_license: false
-houdini_sidefx_labs: true
-houdini_sidefxlabs_name: "SideFX Labs {{ houdini_version }} Production Build"
 houdini_sidefx_packages_path: "/opt/sidefx/sidefx_packages"
 
 houdini_include_user_config: true
 houdini_user_config: "/etc/skel/houdini{{ houdini_version }}"
 houdini_env:
-  HOUDINI_NO_SPLASH: 0
+  HOUDINI_NO_SPLASH: 1
   HOUDINI_SPLASH_MESSAGE: "configured by ansible"
 houdini_vp_background_settings:
   BackgroundColor:

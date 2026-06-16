@@ -21,7 +21,7 @@
     group: root
     mode: "0644"
 
-- name: Update bw viewport theme
+- name: Update light viewport theme
   become: true
   loop: "{{ houdini_vp_background_settings | dict2items }}"
   loop_control:
