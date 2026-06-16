@@ -19,9 +19,19 @@
       Is this the intended source?
     quiet: true
 
+- name: Filter products by feature list
+  ansible.builtin.set_fact:
+    enabled_houdini_products: >-
+      {{
+        houdini_products
+        | dict2items
+        | selectattr('key', 'in', houdini_features)
+        | items2dict
+      }}
+
 - name: Check for existing houdini products
   become: true
-  loop: "{{ houdini_products | dict2items }}"
+  loop: "{{ enabled_houdini_products | dict2items }}"
   loop_control:
     loop_var: product
     label: "{{ product.key }}"
@@ -61,16 +71,23 @@
   ansible.builtin.include_tasks:
     file: install_products.yml
 
-# TODO fix sidefx labs install source
-# - name: Check for existing sidefx labs
-#   ansible.builtin.stat:
-#     path: "{{ houdini_sidefx_labs_path }}/SideFXLabs{{ houdini_version }}"
-#   register: sidefxlabs_installation_path
+- name: Check for existing houdini package
+  loop: "{{ houdini_packages }}"
+  loop_control:
+    loop_var: "houdini_package"
+    label: "{{ houdini_package.name }}"
+  ansible.builtin.stat:
+    path: '{{ houdini_sidefx_packages_path }}/{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}/LICENSE.md'
+  register: package_install_path
 
-# - name: Include sidefx labs
-#   when: houdini_sidefx_labs and not sidefxlabs_installation_path.stat.exists
-#   ansible.builtin.include_tasks:
-#     file: install_sidefxlabs.yml
+- name: Include sidefx packages
+  loop: "{{ package_install_path.results }}"
+  loop_control:
+    loop_var: "houdini_package_path"
+    label: "{{ houdini_package_path.houdini_package.name }}"
+  when: houdini_packages and not houdini_package_path.stat.exists
+  ansible.builtin.include_tasks:
+    file: install_houdini_packages.yml
 
 - name: Install houdini dependencies
   become: true
@@ -103,6 +120,11 @@
   when: houdini_apprentice_license
   ansible.builtin.include_tasks:
     file: apprentice_license.yml
+
+- name: Configure houdini
+  when: houdini_include_user_config
+  ansible.builtin.include_tasks:
+    file: user_config.yml
 
 - name: Cleanup remote
   become: true

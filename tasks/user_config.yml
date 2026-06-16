@@ -1,0 +1,37 @@
+---
+
+- name: Ensure user script dir exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ houdini_user_config }}"
+    state: "directory"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write houdini environment
+  become: true
+  ansible.builtin.copy:
+    dest: "{{ houdini_user_config }}/houdini.env"
+    content: |
+      {% for key, value in houdini_env.items() %}
+      {{ key }} = {{ value | to_json }}
+      {% endfor %}
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Update bw viewport theme
+  become: true
+  loop: "{{ houdini_vp_background_settings | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  ansible.builtin.lineinfile:
+    path: "{{ houdini_install_dir }}/houdini/config/3DSceneColors.light"
+    regexp: "^{{ item.key }}:"
+    line: "{{ item.key }}:\t{{ item.value.rgb }}\t# {{ item.value.comment }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+...
