@@ -68,7 +68,10 @@
 
 - name: Get iso artifact
   become: true
-  when: false in products_query.values() and houdini_iso_url != ""
+  when:
+    - false in products_query.values()
+    - houdini_iso_url != ""
+    - false in (package_install_path.results | map(attribute='stat.exists') | list)
   ansible.builtin.get_url:
     url: "{{ houdini_iso_url }}"
     dest: "{{ houdini_package_dir }}/{{ houdini_iso_url | basename }}"

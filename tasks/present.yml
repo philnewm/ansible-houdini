@@ -39,6 +39,15 @@
     path: "{{ product.value.install_path }}"
   register: product_install_paths
 
+- name: Check for existing houdini package
+  loop: "{{ houdini_packages }}"
+  loop_control:
+    loop_var: "houdini_package"
+    label: "{{ houdini_package.name }}"
+  ansible.builtin.stat:
+    path: '{{ houdini_sidefx_packages_path }}/{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}/LICENSE.md'
+  register: package_install_path
+
 - name: Remap product install paths to simple dict
   ansible.builtin.set_fact:
     products_query: >-
@@ -70,15 +79,6 @@
   when: not houdini_product.stat.exists
   ansible.builtin.include_tasks:
     file: install_products.yml
-
-- name: Check for existing houdini package
-  loop: "{{ houdini_packages }}"
-  loop_control:
-    loop_var: "houdini_package"
-    label: "{{ houdini_package.name }}"
-  ansible.builtin.stat:
-    path: '{{ houdini_sidefx_packages_path }}/{{ houdini_package.name | regex_replace("\s", "") }}{{ houdini_package.version }}/LICENSE.md'
-  register: package_install_path
 
 - name: Include sidefx packages
   loop: "{{ package_install_path.results }}"
